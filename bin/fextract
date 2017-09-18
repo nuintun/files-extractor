@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+'use strict';
+
+// set process title
+process.title = 'file extractor';
+
+var path = require('path');
+var program = require('commander');
+var colors = require('colors/safe');
+var pkg = require('../package.json');
+var FilesExtractor = require('../');
+var utils = require('../lib/utils');
+var inquirer = require('inquirer');
+
+var cwd = process.cwd();
+
+var formatter = {
+  dir: function(value) {
+    return path.join(cwd, value);
+  },
+  zip: function(value) {
+    return /\.zip$/i.test(value) ? value : value + '.zip';
+  }
+};
+
+program
+  .version(pkg.version)
+  .description(colors.reset.cyan.bold(pkg.description))
+  .option('-v, --verbose', 'show more processing logs')
+  .option('-d, --dir <path>', 'set the out dir of file extractor', formatter.dir)
+  .option('-s, --start <date>', 'set the start date of file extractor', Date)
+  .option('-e, --end <date>', 'set the end date of file extractor', Date)
+  .option('-z, --zip <filename>', 'compress the extracted files into a zip file', formatter.zip);
+
+program.on('--help', function() {
+  process.stdout.write(`\n  Documentation can be found at ${ colors.reset.magenta.bold(pkg.homepage) }.\n`);
+});
+
+program.parse(process.argv);
+
+function prompt(type, callback) {
+  return {
+    type: 'input',
+    name: type,
+    message: `Please enter ${ type } date: `,
+    validate: function(value) {
+      if (utils.dateIsValid(new Date(value))) {
+        return true;
+      }
+
+      return `Oops, value "${ value }" isn't a valid date!`;
+    }
+  };
+}
+
+var questions = [];
+var ini = FilesExtractor.loadYAML();
+var iniStart = ini.start && new Date(ini.start);
+var iniEnd = ini.end && new Date(ini.end);
+
+if (program.hasOwnProperty('start')) {
+  if (!utils.dateIsValid(program.start)) {
+    questions.push(prompt('start'));
+  }
+} else {
+  if (!utils.dateIsValid(iniStart)) {
+    questions.push(prompt('start'));
+  }
+}
+
+if (program.hasOwnProperty('end')) {
+  if (!utils.dateIsValid(program.end)) {
+    questions.push(prompt('end'));
+  }
+}
+
+function options(program) {
+
+}
+
+if (questions.length) {
+  inquirer
+    .prompt(questions)
+    .then(function(input) {
+      var verbose = Boolean(program.verbose);
+      var dir = program.dir || formatter.dir(ini.dir || '.extract');
+      var start = input.start ? new Date(input.start) : iniStart;
+      var end = input.end ? new Date(input.end) : utils.dateIsValid(iniEnd) ? iniEnd : new Date();
+      var zip = program.zip || formatter.zip(ini.zip || start.getTime());
+
+      console.log(JSON.stringify({ verbose, dir, start, end, zip }, null, 2));
+    }).catch(function(error) {
+      process.stderr.write(error);
+    });
+} else {
+
+}
