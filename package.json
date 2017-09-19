@@ -26,6 +26,7 @@
   "bugs": {
     "url": "https://github.com/nuintun/files-extractor/issues"
   },
+  "preferGlobal": true,
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
     "colors": "^1.1.2",
