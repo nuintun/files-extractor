@@ -13,8 +13,8 @@ var FilesExtractor = require('../');
 var utils = require('../lib/utils');
 var inquirer = require('inquirer');
 
-var CWD = process.cwd();
-var FILTER = ['mtime', 'ctime', 'atime', 'birthtime'];
+var CWD = utils.CWD;
+var TYPES = ['mtime', 'ctime', 'atime', 'birthtime'];
 
 var formatter = {
   date: function(value) {
@@ -24,20 +24,29 @@ var formatter = {
 
     return new Date(value);
   },
-  dir: function(value) {
-    return path.join(CWD, String(value));
+  files: function(value) {
+    if (!value) {
+      return '**/*';
+    }
+
+    return String(value);
+  },
+  output: function(value) {
+    if (!value) return '.extract/';
+
+    return (String(value) + '/').replace(/\\+/g, '/');
   }
 };
 
 program
   .version(pkg.version)
   .description(colors.reset.cyan.bold(pkg.description))
-  .option('-v, --verbose', 'show more processing logs')
-  .option('-d, --dir <path>', 'set the out dir of file extractor', formatter.dir)
-  .option('-s, --start <date>', 'set the start date of file extractor', formatter.date)
-  .option('-e, --end <date>', 'set the end date of file extractor', formatter.date)
-  .option('-f, --filter <type>', 'set the filter type file extractor')
-  .option('-z, --zip', 'compress the extracted files into a zip file');
+  .option('-f, --files <files>', 'set the files of extract', formatter.files)
+  .option('-o, --output <path>', 'set the output dir of extract', formatter.output)
+  .option('-s, --start <date>', 'set the start date of extract', formatter.date)
+  .option('-e, --end <date>', 'set the end date of extract', formatter.date)
+  .option('-t, --type <type>', 'set the filter type of extract')
+  .option('-d, --dot', 'extract dot files');
 
 program.on('--help', function() {
   process.stdout.write(`\n  Documentation can be found at ${ colors.reset.magenta.bold(pkg.homepage) }.\n`);
@@ -63,7 +72,7 @@ function promptDate(type, callback) {
 function promptFilter() {
   return {
     type: 'list',
-    name: 'filter',
+    name: 'type',
     message: 'Please choose filter type: ',
     choices: ['mtime', 'ctime', 'atime', 'birthtime']
   };
@@ -73,10 +82,12 @@ var questions = [];
 var INI = FilesExtractor.loadYAML();
 var INIStart = INI.start && formatter.date(INI.start);
 var INIEnd = INI.end && formatter.date(INI.end);
-var INIFilter = FILTER.indexOf(INI.FILTER) !== -1 ? INI.FILTER : FILTER[0];
+var INIType = TYPES.indexOf(INI.TYPES) !== -1 ? INI.TYPES : TYPES[0];
+var INIIgnore = INI.ignore;
 
 INIStart = utils.dateIsValid(INIStart) ? INIStart : null;
 INIEnd = utils.dateIsValid(INIEnd) ? INIEnd : null;
+INIIgnore = Array.isArray(INIIgnore) ? INIIgnore : (typeof INIIgnore === 'string' ? [INIIgnore] : []);
 
 if (program.hasOwnProperty('start')) {
   if (!utils.dateIsValid(program.start)) {
@@ -94,36 +105,50 @@ if (program.hasOwnProperty('end')) {
   }
 }
 
-if (program.hasOwnProperty('filter')) {
-  if (FILTER.indexOf(program.filter) === -1) {
+if (program.hasOwnProperty('type')) {
+  if (TYPES.indexOf(program.type) === -1) {
     questions.push(promptFilter());
   }
+}
+
+function exec(files, output, start, end, dot, type, ignore) {
+  ignore.push(output + '**/*');
+
+  return new FilesExtractor({
+    files: files,
+    output: output,
+    start: start,
+    end: end,
+    dot: dot,
+    type: type,
+    ignore: ignore
+  }).extract();
 }
 
 if (questions.length) {
   inquirer
     .prompt(questions)
     .then(function(input) {
-      var verbose = Boolean(program.verbose || INI.verbose);
-      var dir = program.dir || formatter.dir(INI.dir || '.extract');
+      var files = formatter.files(program.files || INI.files);
+      var output = program.output || formatter.output(INI.output);
       var start = input.start ? formatter.date(input.start) : (program.start || INIStart);
       var end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
-      var zip = Boolean(program.zip || INI.zip);
-      var filter = input.filter || program.filter || INIFilter;
+      var dot = Boolean(program.dot || INI.dot);
+      var type = input.type || program.type || INIType;
 
-      console.log(JSON.stringify({ verbose, dir, start, end, zip, filter }, null, 2));
+      return exec(files, output, start, end, dot, type, INIIgnore);
     }).catch(function(error) {
       process.stderr.write(error);
     });
 } else {
   process.nextTick(function() {
-    var verbose = Boolean(program.verbose || INI.verbose);
-    var dir = program.dir || formatter.dir(INI.dir || '.extract');
+    var files = formatter.files(program.files || INI.files);
+    var output = program.output || formatter.output(INI.output);
     var start = program.start ? program.start : INIStart;
     var end = program.end ? program.end : (INIEnd || new Date());
-    var zip = Boolean(program.zip || INI.zip);
-    var filter = program.filter || INIFilter;
+    var dot = Boolean(program.dot || INI.dot);
+    var type = program.type || INIType;
 
-    console.log(JSON.stringify({ verbose, dir, start, end, zip, filter }, null, 2));
+    return exec(files, output, start, end, dot, type, INIIgnore);
   });
 }
