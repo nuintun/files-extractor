@@ -13,14 +13,19 @@ var FilesExtractor = require('../');
 var utils = require('../lib/utils');
 var inquirer = require('inquirer');
 
-var cwd = process.cwd();
+var CWD = process.cwd();
+var FILTER = ['mtime', 'ctime', 'atime', 'birthtime'];
 
 var formatter = {
-  dir: function(value) {
-    return path.join(cwd, value);
+  date: function(value) {
+    if (/^[+-]?\d*(\.\d*)?$/.test(value)) {
+      value = parseInt(value);
+    }
+
+    return new Date(value);
   },
-  zip: function(value) {
-    return /\.zip$/i.test(value) ? value : value + '.zip';
+  dir: function(value) {
+    return path.join(CWD, String(value));
   }
 };
 
@@ -29,9 +34,10 @@ program
   .description(colors.reset.cyan.bold(pkg.description))
   .option('-v, --verbose', 'show more processing logs')
   .option('-d, --dir <path>', 'set the out dir of file extractor', formatter.dir)
-  .option('-s, --start <date>', 'set the start date of file extractor', Date)
-  .option('-e, --end <date>', 'set the end date of file extractor', Date)
-  .option('-z, --zip <filename>', 'compress the extracted files into a zip file', formatter.zip);
+  .option('-s, --start <date>', 'set the start date of file extractor', formatter.date)
+  .option('-e, --end <date>', 'set the end date of file extractor', formatter.date)
+  .option('-f, --filter <type>', 'set the filter type file extractor')
+  .option('-z, --zip', 'compress the extracted files into a zip file');
 
 program.on('--help', function() {
   process.stdout.write(`\n  Documentation can be found at ${ colors.reset.magenta.bold(pkg.homepage) }.\n`);
@@ -39,13 +45,13 @@ program.on('--help', function() {
 
 program.parse(process.argv);
 
-function prompt(type, callback) {
+function promptDate(type, callback) {
   return {
     type: 'input',
     name: type,
     message: `Please enter ${ type } date: `,
     validate: function(value) {
-      if (utils.dateIsValid(new Date(value))) {
+      if (utils.dateIsValid(formatter.date(value))) {
         return true;
       }
 
@@ -54,45 +60,70 @@ function prompt(type, callback) {
   };
 }
 
+function promptFilter() {
+  return {
+    type: 'list',
+    name: 'filter',
+    message: 'Please choose filter type: ',
+    choices: ['mtime', 'ctime', 'atime', 'birthtime']
+  };
+}
+
 var questions = [];
-var ini = FilesExtractor.loadYAML();
-var iniStart = ini.start && new Date(ini.start);
-var iniEnd = ini.end && new Date(ini.end);
+var INI = FilesExtractor.loadYAML();
+var INIStart = INI.start && formatter.date(INI.start);
+var INIEnd = INI.end && formatter.date(INI.end);
+var INIFilter = FILTER.indexOf(INI.FILTER) !== -1 ? INI.FILTER : FILTER[0];
+
+INIStart = utils.dateIsValid(INIStart) ? INIStart : null;
+INIEnd = utils.dateIsValid(INIEnd) ? INIEnd : null;
 
 if (program.hasOwnProperty('start')) {
   if (!utils.dateIsValid(program.start)) {
-    questions.push(prompt('start'));
+    questions.push(promptDate('start'));
   }
 } else {
-  if (!utils.dateIsValid(iniStart)) {
-    questions.push(prompt('start'));
+  if (!INIStart) {
+    questions.push(promptDate('start'));
   }
 }
 
 if (program.hasOwnProperty('end')) {
   if (!utils.dateIsValid(program.end)) {
-    questions.push(prompt('end'));
+    questions.push(promptDate('end'));
   }
 }
 
-function options(program) {
-
+if (program.hasOwnProperty('filter')) {
+  if (FILTER.indexOf(program.filter) === -1) {
+    questions.push(promptFilter());
+  }
 }
 
 if (questions.length) {
   inquirer
     .prompt(questions)
     .then(function(input) {
-      var verbose = Boolean(program.verbose);
-      var dir = program.dir || formatter.dir(ini.dir || '.extract');
-      var start = input.start ? new Date(input.start) : iniStart;
-      var end = input.end ? new Date(input.end) : utils.dateIsValid(iniEnd) ? iniEnd : new Date();
-      var zip = program.zip || formatter.zip(ini.zip || start.getTime());
+      var verbose = Boolean(program.verbose || INI.verbose);
+      var dir = program.dir || formatter.dir(INI.dir || '.extract');
+      var start = input.start ? formatter.date(input.start) : (program.start || INIStart);
+      var end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
+      var zip = Boolean(program.zip || INI.zip);
+      var filter = input.filter || program.filter || INIFilter;
 
-      console.log(JSON.stringify({ verbose, dir, start, end, zip }, null, 2));
+      console.log(JSON.stringify({ verbose, dir, start, end, zip, filter }, null, 2));
     }).catch(function(error) {
       process.stderr.write(error);
     });
 } else {
+  process.nextTick(function() {
+    var verbose = Boolean(program.verbose || INI.verbose);
+    var dir = program.dir || formatter.dir(INI.dir || '.extract');
+    var start = program.start ? program.start : INIStart;
+    var end = program.end ? program.end : (INIEnd || new Date());
+    var zip = Boolean(program.zip || INI.zip);
+    var filter = program.filter || INIFilter;
 
+    console.log(JSON.stringify({ verbose, dir, start, end, zip, filter }, null, 2));
+  });
 }
