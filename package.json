@@ -6,6 +6,10 @@
   "bin": {
     "fextract": "bin/fextract"
   },
+  "author": {
+    "name": "nuintun",
+    "email": "<nuintun@qq.com>"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/files-extractor.git"
