@@ -1,6 +1,6 @@
 {
   "name": "files-extractor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Extract files that have changed between the specified date.",
   "main": "index.js",
   "bin": {
@@ -9,6 +9,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/files-extractor.git"
+  },
+  "engines": {
+    "node": ">=4.0.0"
   },
   "keywords": [
     "extract",

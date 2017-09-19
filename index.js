@@ -8,23 +8,23 @@
 
 'use strict';
 
-var glob = require('glob');
-var path = require('path');
-var fs = require('fs-extra')
-var yaml = require('js-yaml');
-var colors = require('colors');
-var utils = require('./lib/utils');
-var async = require('./lib/async');
-var ProgressBar = require('progress');
+const glob = require('glob');
+const path = require('path');
+const fs = require('fs-extra')
+const yaml = require('js-yaml');
+const colors = require('colors');
+const utils = require('./lib/utils');
+const async = require('./lib/async');
+const ProgressBar = require('progress');
 
-var CWD = utils.CWD;
-var YAMLFILE = path.join(CWD, 'fextract.yml');
+const CWD = utils.CWD;
+const YAMLFILE = path.join(CWD, 'fextract.yml');
 
 function filter(files, options) {
   return files.filter(function(file) {
     try {
-      var stat = fs.statSync(path.join(CWD, file));
-      var time = stat[options.type];
+      let stat = fs.statSync(path.join(CWD, file));
+      let time = stat[options.type];
 
       return time >= options.start && time <= options.end;
     } catch (error) {
@@ -38,13 +38,13 @@ function padStart(value, length) {
 }
 
 function formatDate(date) {
-  var year = date.getFullYear();
-  var month = padStart(date.getMonth() + 1, 2);
-  var day = padStart(date.getDate(), 2);
-  var hour = padStart(date.getHours(), 2);
-  var minutes = padStart(date.getMinutes(), 2);
-  var seconds = padStart(date.getSeconds(), 2);
-  var millisecond = padStart(date.getMilliseconds(), 3);
+  let year = date.getFullYear();
+  let month = padStart(date.getMonth() + 1, 2);
+  let day = padStart(date.getDate(), 2);
+  let hour = padStart(date.getHours(), 2);
+  let minutes = padStart(date.getMinutes(), 2);
+  let seconds = padStart(date.getSeconds(), 2);
+  let millisecond = padStart(date.getMilliseconds(), 3);
 
   return `${ year }${ month }${ day }${ hour }${ minutes }${ seconds }${ millisecond }`;
 }
@@ -73,7 +73,7 @@ FilesExtractor.loadYAML = function() {
 
 FilesExtractor.prototype = {
   extract: function() {
-    var options = this.options;
+    let options = this.options;
 
     glob(options.files, { root: CWD, dot: options.dot, nodir: true, ignore: options.ignore }, function(error, files) {
       if (error) {
@@ -82,29 +82,27 @@ FilesExtractor.prototype = {
 
       files = filter(files, options);
 
-      var bar = new ProgressBar(
-        `${ colors.reset.green.bold('Extracting') }: [:bar] (:current/:total) :percent - :file`, {
-          width: 30,
-          clear: true,
-          total: files.length,
-          stream: process.stdout
-        }
-      );
+      let extracting = colors.reset.green.bold('Extracting');
+      let fmt = `${ extracting }: [:bar] (:current/:total) :percent - :file`;
+      let bar = new ProgressBar(fmt, { width: 30, clear: true, total: files.length, stream: process.stdout, head: '>' });
 
       async.series(files, function(file, next) {
         fs.copy(file, dest(file, options), { preserveTimestamps: true }, function(error) {
-          if (error) {
-            bar.interrupt(`${ colors.reset.green.bold('Extracting') }: ${ colors.reset.red.bold(file) } failed!`);
-          }
+          bar.tick({ file: colors.reset.cyan.bold(file) });
 
-          bar.tick({
-            file: colors.reset.cyan.bold(file)
-          });
+          if (error) {
+            let syscall = error.syscall || 'extract';
+            let code = error.code || 'failed';
+
+            bar.interrupt(`${ extracting }: ${ syscall } ${ colors.reset.red.bold(file) } ${ code }!`);
+          }
 
           next();
         });
       }, function() {
-        process.stdout.write(colors.reset.green.bold('Oh yeah, extract files successfully!'));
+        let message = files.length ? 'Oh yeah, extract the matched files successfully!' : 'Oops, there is no files matched the condition!';
+
+        process.stdout.write(colors.reset.green.bold(message));
         process.exit();
       });
     });
