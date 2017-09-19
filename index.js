@@ -58,12 +58,12 @@ function FilesExtractor(options) {
 }
 
 FilesExtractor.loadYAML = function() {
-  var ini = {};
+  let ini = {};
 
   // File config
   if (fs.pathExistsSync(YAMLFILE)) {
     // Parse yaml
-    var source = fs.readFileSync(YAMLFILE);
+    let source = fs.readFileSync(YAMLFILE);
 
     ini = yaml.safeLoad(source, { filename: YAMLFILE });
   }
