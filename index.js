@@ -8,14 +8,16 @@
 
 'use strict';
 
+const ora = require('ora');
 const glob = require('glob');
 const path = require('path');
 const fs = require('fs-extra')
 const yaml = require('js-yaml');
-const colors = require('colors');
+const chalk = require('chalk');
 const utils = require('./lib/utils');
 const async = require('./lib/async');
 const ProgressBar = require('progress');
+const spinners = require('cli-spinners');
 
 const CWD = utils.CWD;
 const YAMLFILE = path.join(CWD, 'fextract.yml');
@@ -53,6 +55,9 @@ function dest(file, options) {
   return path.join(CWD, options.output, `${ formatDate(options.start) } - ${ formatDate(options.end) }`, file);
 }
 
+const searching = chalk.reset.green.bold('Searching');
+const load = ora({ stream: process.stdout, spinner: spinners.line });
+
 function FilesExtractor(options) {
   this.options = options;
 }
@@ -73,28 +78,32 @@ FilesExtractor.loadYAML = function() {
 
 FilesExtractor.prototype = {
   extract: function() {
+    load.start();
+
     let options = this.options;
 
     glob(options.files, { root: CWD, dot: options.dot, nodir: true, ignore: options.ignore }, function(error, files) {
+      load.stop();
+
       if (error) {
         return process.stderr.write(error);
       }
 
       files = filter(files, options);
 
-      let extracting = colors.reset.green.bold('Extracting');
+      let extracting = chalk.reset.green.bold('Extracting');
       let fmt = `${ extracting }: [:bar] (:current/:total) :percent - :file`;
       let bar = new ProgressBar(fmt, { width: 30, clear: true, total: files.length, stream: process.stdout, head: '>' });
 
       async.series(files, function(file, next) {
         fs.copy(file, dest(file, options), { preserveTimestamps: true }, function(error) {
-          bar.tick({ file: colors.reset.cyan.bold(file) });
+          bar.tick({ file: chalk.reset.cyan.bold(file) });
 
           if (error) {
             let syscall = error.syscall || 'extract';
             let code = error.code || 'failed';
 
-            bar.interrupt(`${ extracting }: ${ syscall } ${ colors.reset.red.bold(file) } ${ code }!`);
+            bar.interrupt(`${ extracting }: ${ syscall } ${ chalk.reset.red.bold(file) } ${ code }!`);
           }
 
           next();
@@ -102,9 +111,11 @@ FilesExtractor.prototype = {
       }, function() {
         let message = files.length ? 'Oh yeah, extract the matched files successfully!' : 'Oops, there is no files matched the condition!';
 
-        process.stdout.write(colors.reset.green.bold(message));
+        process.stdout.write(chalk.reset.green.bold(message));
         process.exit();
       });
+    }).on('match', function(file) {
+      load.text = `${ searching }: ${ chalk.reset.cyan.bold(file) }`;
     });
 
     return this;

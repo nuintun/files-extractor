@@ -6,8 +6,8 @@
 process.title = 'file extractor';
 
 const path = require('path');
+const chalk = require('chalk');
 const program = require('commander');
-const colors = require('colors/safe');
 const pkg = require('../package.json');
 const FilesExtractor = require('../');
 const utils = require('../lib/utils');
@@ -40,7 +40,7 @@ const formatter = {
 
 program
   .version(pkg.version)
-  .description(colors.reset.cyan.bold(pkg.description))
+  .description(chalk.reset.cyan.bold(pkg.description))
   .option('-f, --files <files>', 'set the files of extract', formatter.files)
   .option('-o, --output <path>', 'set the output dir of extract', formatter.output)
   .option('-s, --start <date>', 'set the start date of extract', formatter.date)
@@ -49,7 +49,7 @@ program
   .option('-d, --dot', 'extract dot files');
 
 program.on('--help', function() {
-  process.stdout.write(`\n  Documentation can be found at ${ colors.reset.magenta.bold(pkg.homepage) }.\n`);
+  process.stdout.write(`\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
 });
 
 program.parse(process.argv);
