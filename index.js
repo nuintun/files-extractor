@@ -14,6 +14,7 @@ const path = require('path');
 const fs = require('fs-extra')
 const yaml = require('js-yaml');
 const chalk = require('chalk');
+var cluster = require('cluster');
 const utils = require('./lib/utils');
 const async = require('./lib/async');
 const ProgressBar = require('progress');
@@ -21,17 +22,25 @@ const spinners = require('cli-spinners');
 
 const CWD = utils.CWD;
 const YAMLFILE = path.join(CWD, 'fextract.yml');
+const searching = chalk.reset.green.bold('Searching');
+const filtering = chalk.reset.green.bold('Filtering');
+const load = ora({ text: searching, stream: process.stdout, spinner: spinners.line });
 
 function filter(files, options) {
   return files.filter(function(file) {
-    try {
-      let stat = fs.statSync(path.join(CWD, file));
-      let time = stat[options.type];
+    load.text = `${ filtering }: ${ chalk.reset.cyan.bold(file) }`;
 
-      return time >= options.start && time <= options.end;
+    let stat;
+
+    try {
+      stat = fs.statSync(path.join(CWD, file));
     } catch (error) {
       return false;
     }
+
+    let time = stat[options.type];
+
+    return time >= options.start && time <= options.end;
   });
 }
 
@@ -54,9 +63,6 @@ function formatDate(date) {
 function dest(file, options) {
   return path.join(CWD, options.output, `${ formatDate(options.start) } - ${ formatDate(options.end) }`, file);
 }
-
-const searching = chalk.reset.green.bold('Searching');
-const load = ora({ stream: process.stdout, spinner: spinners.line });
 
 function FilesExtractor(options) {
   this.options = options;
@@ -83,13 +89,15 @@ FilesExtractor.prototype = {
     let options = this.options;
 
     glob(options.files, { root: CWD, dot: options.dot, nodir: true, ignore: options.ignore }, function(error, files) {
-      load.stop();
-
       if (error) {
+        load.stop();
+
         return process.stderr.write(error);
       }
 
       files = filter(files, options);
+
+      load.stop();
 
       let extracting = chalk.reset.green.bold('Extracting');
       let fmt = `${ extracting }: [:bar] (:current/:total) :percent - :file`;

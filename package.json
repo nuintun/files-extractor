@@ -1,6 +1,6 @@
 {
   "name": "files-extractor",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Extract files that have changed between the specified date.",
   "main": "index.js",
   "bin": {
