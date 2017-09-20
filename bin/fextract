@@ -127,8 +127,8 @@ if (questions.length) {
     // Fiexd can't start cluster.fork because of wait stdin
     argv.splice(
       2, argv.length - 2,
-      '-f', JSON.stringify(files),
-      '-o', JSON.stringify(output),
+      '-f', files,
+      '-o', output,
       '-s', start,
       '-e', end,
       '-t', type
