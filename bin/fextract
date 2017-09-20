@@ -49,7 +49,7 @@ program
   .option('-d, --dot', 'extract dot files');
 
 program.on('--help', function() {
-  process.stdout.write(`\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
+  process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
 });
 
 program.parse(process.argv);
@@ -82,7 +82,7 @@ let questions = [];
 let INI = FilesExtractor.loadYAML();
 let INIStart = INI.start && formatter.date(INI.start);
 let INIEnd = INI.end && formatter.date(INI.end);
-let INIType = TYPES.indexOf(INI.TYPES) !== -1 ? INI.TYPES : TYPES[0];
+let INIType = TYPES.indexOf(INI.type) !== -1 ? INI.type : TYPES[0];
 let INIIgnore = INI.ignore;
 
 INIStart = utils.dateIsValid(INIStart) ? INIStart : null;
