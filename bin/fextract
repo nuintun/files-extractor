@@ -125,7 +125,18 @@ if (questions.length) {
     let argv = process.argv;
 
     // Fiexd can't start cluster.fork because of wait stdin
-    argv.splice(2, argv.length - 2, '-s', start, '-e', end, '-t', type);
+    argv.splice(
+      2, argv.length - 2,
+      '-f', JSON.stringify(files),
+      '-o', JSON.stringify(output),
+      '-s', start,
+      '-e', end,
+      '-t', type
+    );
+
+    if (dot) {
+      argv.push('-d');
+    }
 
     return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
   }).catch(function(error) {
