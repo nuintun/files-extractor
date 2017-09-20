@@ -121,6 +121,7 @@ if (questions.length) {
       let end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
       let dot = Boolean(program.dot || INI.dot);
       let type = input.type || program.type || INIType;
+      let ignore = INIIgnore;
 
       return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
     }).catch(function(error) {
@@ -134,6 +135,7 @@ if (questions.length) {
     let end = program.end ? program.end : (INIEnd || new Date());
     let dot = Boolean(program.dot || INI.dot);
     let type = program.type || INIType;
+    let ignore = INIIgnore;
 
     return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
   });
