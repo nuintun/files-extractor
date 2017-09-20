@@ -72,7 +72,7 @@ function formatDate(date) {
 }
 
 function dest(file, options) {
-  return path.join(CWD, options.output, `${ formatDate(options.start) } - ${ formatDate(options.end) }`, file);
+  return path.resolve(CWD, options.output, `${ formatDate(options.start) } - ${ formatDate(options.end) }`, file);
 }
 
 function FilesExtractor(options) {
