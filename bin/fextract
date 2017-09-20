@@ -87,7 +87,7 @@ let INIIgnore = INI.ignore;
 
 INIStart = utils.dateIsValid(INIStart) ? INIStart : null;
 INIEnd = utils.dateIsValid(INIEnd) ? INIEnd : null;
-INIIgnore = Array.isArray(INIIgnore) ? INIIgnore : (typeof INIIgnore === 'string' ? [INIIgnore] : []);
+INIIgnore = Array.isArray(INIIgnore) ? INIIgnore : (utils.isString(INIIgnore) ? [INIIgnore] : []);
 
 if (program.hasOwnProperty('start')) {
   if (!utils.dateIsValid(program.start)) {
@@ -112,21 +112,26 @@ if (program.hasOwnProperty('type')) {
 }
 
 if (questions.length) {
-  inquirer
-    .prompt(questions)
-    .then(function(input) {
-      let files = formatter.files(program.files || INI.files);
-      let output = program.output || formatter.output(INI.output);
-      let start = input.start ? formatter.date(input.start) : (program.start || INIStart);
-      let end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
-      let dot = Boolean(program.dot || INI.dot);
-      let type = input.type || program.type || INIType;
-      let ignore = INIIgnore;
+  let prompt = inquirer.prompt(questions);
 
-      return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
-    }).catch(function(error) {
-      process.stderr.write(error);
-    });
+  prompt.then(function(input) {
+    let files = formatter.files(program.files || INI.files);
+    let output = program.output || formatter.output(INI.output);
+    let start = input.start ? formatter.date(input.start) : (program.start || INIStart);
+    let end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
+    let dot = Boolean(program.dot || INI.dot);
+    let type = input.type || program.type || INIType;
+    let ignore = INIIgnore;
+    let argv = process.argv;
+
+    // Fiexd can't start cluster.fork because of wait stdin
+    argv.splice(2, argv.length - 2, '-s', start, '-e', end, '-t', type);
+
+    return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
+  }).catch(function(error) {
+    process.stderr.write(error);
+    process.exit();
+  });
 } else {
   process.nextTick(function() {
     let files = formatter.files(program.files || INI.files);

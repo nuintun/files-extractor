@@ -12,8 +12,9 @@ const ora = require('ora');
 const glob = require('glob');
 const path = require('path');
 const fs = require('fs-extra')
-const yaml = require('js-yaml');
 const chalk = require('chalk');
+const yaml = require('js-yaml');
+const cluster = require('cluster');
 const utils = require('./lib/utils');
 const async = require('./lib/async');
 const ProgressBar = require('progress');
@@ -22,15 +23,19 @@ const spinners = require('cli-spinners');
 const CWD = utils.CWD;
 const YAML = 'fextract.yml';
 const YAMLFILE = path.join(CWD, YAML);
-const searching = chalk.reset.green.bold('Searching');
-const filtering = chalk.reset.green.bold('Filtering');
-const load = ora({ text: searching, stream: process.stdout, spinner: spinners.line });
+
+function color(value, color) {
+  return chalk.reset.bold[color || 'cyan'](value);
+}
 
 function filter(files, options) {
   return files.filter(function(file) {
-    load.text = `${ filtering }: ${ chalk.reset.cyan.bold(file) }`;
-
     let stat;
+
+    process.send({
+      status: STATUS.FILTERING,
+      data: file
+    });
 
     try {
       stat = fs.statSync(path.join(CWD, file));
@@ -87,51 +92,144 @@ FilesExtractor.loadYAML = function() {
   return ini;
 }
 
+const STATUS = {
+  FAILED: 0,
+  WARNING: 1,
+  SEARCHING: 2,
+  FILTERING: 3,
+  FILTERED: 4,
+  EXTRACTING: 5,
+  EXTRACTED: 6
+};
+const starting = color('Starting...', 'green');
+const searching = color('Searching', 'green');
+const filtering = color('Filtering', 'green');
+const extracting = color('Extracting', 'green');
+const fmt = `${ extracting }: [:bar] (:current/:total) :percent - :file`;
+
 FilesExtractor.prototype = {
-  extract: function() {
-    load.start();
-
-    let options = this.options;
-
-    glob(options.files, { root: CWD, dot: options.dot, nodir: true, ignore: options.ignore }, function(error, files) {
-      if (error) {
-        load.stop();
-
-        return process.stderr.write(error);
-      }
-
-      files = filter(files, options);
-
-      load.stop();
-
-      let extracting = chalk.reset.green.bold('Extracting');
-      let fmt = `${ extracting }: [:bar] (:current/:total) :percent - :file`;
-      let bar = new ProgressBar(fmt, { width: 30, clear: true, total: files.length, stream: process.stdout, head: '>' });
-
-      async.series(files, function(file, next) {
-        fs.copy(file, dest(file, options), { preserveTimestamps: true }, function(error) {
-          bar.tick({ file: chalk.reset.cyan.bold(file) });
-
-          if (error) {
-            let syscall = error.syscall || 'extract';
-            let code = error.code || 'failed';
-
-            bar.interrupt(`${ extracting }: ${ syscall } ${ chalk.reset.red.bold(file) } ${ code }!`);
-          }
-
-          next();
-        });
-      }, function() {
-        let message = files.length ? 'Oh yeah, extract the matched files successfully!' : 'Oops, there is no files matched the condition!';
-
-        process.stdout.write(chalk.reset.green.bold(message));
-        process.exit();
-      });
-    }).on('match', function(file) {
-      load.text = `${ searching }: ${ chalk.reset.cyan.bold(file) }`;
+  spinner: function() {
+    return this.load = ora({
+      stream: process.stdout,
+      spinner: spinners.line
+    }).start(starting);
+  },
+  bar: function(total) {
+    return this.progress = new ProgressBar(fmt, {
+      width: 30,
+      clear: true,
+      total: total,
+      stream: process.stdout,
+      head: '>'
     });
+  },
+  UI: function(message) {
+    let context = this;
+    let data = message.data;
+    let load = context.load;
+    let progress = context.progress;
 
-    return this;
+    switch (message.status) {
+      case STATUS.FAILED:
+        load.fail(data.message);
+
+        process.exit();
+        break;
+      case STATUS.WARNING:
+        progress.interrupt(`${ extracting }: ${ data.syscall } ${ color(data.file, 'red') } ${ data.code }!`);
+        break;
+      case STATUS.SEARCHING:
+        load.text = `${ searching }: ${ color(data) }`;
+        break;
+      case STATUS.FILTERING:
+        load.text = `${ filtering }: ${ color(data) }`;
+        break;
+      case STATUS.FILTERED:
+        load.stop();
+        context.bar(data);
+        break;
+      case STATUS.EXTRACTING:
+        progress.tick({
+          file: color(data)
+        });
+        break;
+      case STATUS.EXTRACTED:
+        process.stdout.write(color(data, 'green'));
+        process.exit();
+        break;
+    }
+  },
+  extract: function() {
+    let context = this;
+    let options = context.options;
+
+    if (cluster.isMaster) {
+      cluster.setupMaster({
+        silent: true
+      });
+
+      context.spinner();
+
+      let worker = cluster.fork();
+
+      // Listen event
+      worker.on('message', context.UI.bind(context));
+    } else {
+      glob(options.files, { root: CWD, dot: options.dot, nodir: true, ignore: options.ignore }, function(error, files) {
+        if (error) {
+          return process.send({
+            status: STATUS.FAILED,
+            data: error
+          });
+        }
+
+        files = filter(files, options);
+
+        process.send({
+          status: STATUS.FILTERED,
+          data: files.length
+        });
+
+        async.series(files, function(file, next) {
+          fs.copy(file, dest(file, options), { preserveTimestamps: true }, function(error) {
+            process.send({
+              status: STATUS.EXTRACTING,
+              data: file
+            });
+
+            if (error) {
+              let syscall = error.syscall || 'extract';
+              let code = error.code || 'failed';
+
+              process.send({
+                status: STATUS.WARNING,
+                data: { syscall, file, code }
+              });
+            }
+
+            next();
+          });
+        }, function() {
+          let message = files.length
+            ? 'Oh yeah, extract the matched files successfully!'
+            : 'Oops, there is no files matched the condition!';
+
+          process.send({
+            status: STATUS.EXTRACTED,
+            data: message
+          });
+
+          process.exit();
+        });
+      }).on('match', function(file) {
+        process.send({
+          status: STATUS.SEARCHING,
+          data: file
+        });
+      });
+    }
+
+    return context;
   }
 };
 
