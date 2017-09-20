@@ -14,14 +14,14 @@ const path = require('path');
 const fs = require('fs-extra')
 const yaml = require('js-yaml');
 const chalk = require('chalk');
-var cluster = require('cluster');
 const utils = require('./lib/utils');
 const async = require('./lib/async');
 const ProgressBar = require('progress');
 const spinners = require('cli-spinners');
 
 const CWD = utils.CWD;
-const YAMLFILE = path.join(CWD, 'fextract.yml');
+const YAML = 'fextract.yml';
+const YAMLFILE = path.join(CWD, YAML);
 const searching = chalk.reset.green.bold('Searching');
 const filtering = chalk.reset.green.bold('Filtering');
 const load = ora({ text: searching, stream: process.stdout, spinner: spinners.line });
@@ -65,6 +65,11 @@ function dest(file, options) {
 }
 
 function FilesExtractor(options) {
+  let ignore = options.ignore;
+  let output = options.output;
+
+  ignore.push(output + '**/*', YAML);
+
   this.options = options;
 }
 

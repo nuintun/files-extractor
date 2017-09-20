@@ -111,12 +111,6 @@ if (program.hasOwnProperty('type')) {
   }
 }
 
-function exec(files, output, start, end, dot, type, ignore) {
-  ignore.push(output + '**/*');
-
-  return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
-}
-
 if (questions.length) {
   inquirer
     .prompt(questions)
@@ -128,7 +122,7 @@ if (questions.length) {
       let dot = Boolean(program.dot || INI.dot);
       let type = input.type || program.type || INIType;
 
-      return exec(files, output, start, end, dot, type, INIIgnore);
+      return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
     }).catch(function(error) {
       process.stderr.write(error);
     });
@@ -141,6 +135,6 @@ if (questions.length) {
     let dot = Boolean(program.dot || INI.dot);
     let type = program.type || INIType;
 
-    return exec(files, output, start, end, dot, type, INIIgnore);
+    return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
   });
 }
