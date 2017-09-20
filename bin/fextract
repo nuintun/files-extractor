@@ -129,8 +129,8 @@ if (questions.length) {
       2, argv.length - 2,
       '-f', files,
       '-o', output,
-      '-s', start.getTime(),
-      '-e', end.getTime(),
+      '-s', start.toISOString(),
+      '-e', end.toISOString(),
       '-t', type
     );
 
@@ -139,9 +139,6 @@ if (questions.length) {
     }
 
     return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
-  }).catch(function(error) {
-    process.stderr.write(error);
-    process.exit();
   });
 } else {
   process.nextTick(function() {
