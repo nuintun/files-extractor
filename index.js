@@ -68,13 +68,12 @@ function formatDate(date) {
   let hour = padStart(date.getHours(), 2);
   let minutes = padStart(date.getMinutes(), 2);
   let seconds = padStart(date.getSeconds(), 2);
-  let millisecond = padStart(date.getMilliseconds(), 3);
 
-  return `${ year }${ month }${ day }${ hour }${ minutes }${ seconds }${ millisecond }`;
+  return `${ year }-${ month }-${ day } ${ hour }.${ minutes }.${ seconds }`;
 }
 
 function dest(file, options) {
-  return path.resolve(CWD, options.output, `${ formatDate(options.start) } - ${ formatDate(options.end) }`, file);
+  return path.resolve(CWD, options.output, `${ formatDate(options.start) } & ${ formatDate(options.end) }`, file);
 }
 
 function FilesExtractor(options) {
@@ -162,6 +161,7 @@ FilesExtractor.prototype = {
         });
         break;
       case STATUS.EXTRACTED:
+        progress.terminate();
         process.stdout.write(color(data, 'green', false));
         process.exit();
         break;
