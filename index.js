@@ -25,6 +25,12 @@ const YAML = 'fextract.yml';
 const YAMLFILE = path.join(CWD, YAML);
 
 function color(value, color) {
+  let length = value.length;
+
+  if (length >= 69) {
+    value = value.substring(0, 33) + '...' + value.substring(length - 33);
+  }
+
   return chalk.reset.bold[color || 'cyan'](value);
 }
 
@@ -185,9 +191,11 @@ FilesExtractor.prototype = {
 
         files = filter(files, options);
 
+        let length = files.length;
+
         process.send({
           status: STATUS.FILTERED,
-          data: files.length
+          data: length
         });
 
         async.series(files, function(file, next) {
@@ -210,7 +218,7 @@ FilesExtractor.prototype = {
             next();
           });
         }, function() {
-          let message = files.length
+          let message = length
             ? 'Oh yeah, extract the matched files successfully!'
             : 'Oops, there is no files matched the condition!';
 

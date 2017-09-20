@@ -129,8 +129,8 @@ if (questions.length) {
       2, argv.length - 2,
       '-f', files,
       '-o', output,
-      '-s', start,
-      '-e', end,
+      '-s', start.getTime(),
+      '-e', end.getTime(),
       '-t', type
     );
 
