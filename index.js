@@ -24,11 +24,13 @@ const CWD = utils.CWD;
 const YAML = 'fextract.yml';
 const YAMLFILE = path.join(CWD, YAML);
 
-function color(value, color) {
-  let length = value.length;
+function color(value, color, substr) {
+  if (substr !== false) {
+    let length = value.length;
 
-  if (length >= 69) {
-    value = value.substring(0, 33) + '...' + value.substring(length - 33);
+    if (length >= 33) {
+      value = value.substring(0, 15) + '...' + value.substring(length - 15);
+    }
   }
 
   return chalk.reset.bold[color || 'cyan'](value);
@@ -160,7 +162,7 @@ FilesExtractor.prototype = {
         });
         break;
       case STATUS.EXTRACTED:
-        process.stdout.write(color(data, 'green'));
+        process.stdout.write(color(data, 'green', false));
         process.exit();
         break;
     }
