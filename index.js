@@ -23,7 +23,6 @@ const spinners = require('cli-spinners');
 const CWD = utils.CWD;
 const YAML = 'fextract.yml';
 const YAMLFILE = path.join(CWD, YAML);
-const READOK = fs.constants ? fs.constants.R_OK : fs.R_OK;
 
 /**
  * Colored output
