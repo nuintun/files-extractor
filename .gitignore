@@ -59,3 +59,7 @@ typings/
 
 # npm lock file
 package-lock.json
+
+# files extractor configuration and output
+fextract.yml
+.extract

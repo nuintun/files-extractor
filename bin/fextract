@@ -5,16 +5,15 @@
 // set process title
 process.title = 'files extractor';
 
-// const path = require('path');
 const chalk = require('chalk');
 const program = require('commander');
 const pkg = require('../package.json');
-// const FilesExtractor = require('../');
 const utils = require('../lib/utils');
 const inquirer = require('inquirer');
 const CONST = require('../lib/const');
 const formatter = require('../lib/formatter');
 const validator = require('../lib/validator');
+const FilesExtractor = require('../lib/fextract');
 
 program
   .version(pkg.version)
@@ -22,9 +21,9 @@ program
   .option('-d, --dot', 'extract dot files')
   .option('-f, --files <files>', 'set the files of extract')
   .option('-o, --output <path>', 'set the output dir of extract')
-  .option('-s, --start <date>', 'set the start date of extract')
-  .option('-e, --end <date>', 'set the end date of extract')
-  .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`);
+  .option('-s, --start <date>', 'set the start date of extract', utils.parseDate)
+  .option('-e, --end <date>', 'set the end date of extract', utils.parseDate)
+  .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, utils.parseTypes);
 
 program.on('--help', function() {
   process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
@@ -33,7 +32,7 @@ program.on('--help', function() {
 program.parse(process.argv);
 
 const prompt = [];
-const yaml = utils.loadYAML() || {};
+const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
 function promptDate(name) {
   return {
@@ -55,8 +54,19 @@ function promptTypes() {
     name: 'types',
     type: 'checkbox',
     message: 'Please choose filter types: ',
-    choices: CONST.FILTER_TYPES
+    choices: CONST.FILTER_TYPES,
+    validate: function(value) {
+      if (value.length < 1) {
+        return 'Oops, you must choose at least one type!';
+      }
+
+      return true;
+    }
   };
+}
+
+function invalid(key) {
+  utils.warning(`Option ${ key }'s value is invalid in ${ CONST.YAML }!`);
 }
 
 CONST.OPTIONS_KEYS.forEach(function(key) {
@@ -73,8 +83,15 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
         if (!validate(value)) {
           prompt.push(promptDate(key));
         }
-      } else if (!validate(yamlValue)) {
-        prompt.push(promptDate(key));
+      } else {
+        yamlValue = utils.parseDate(yamlValue);
+
+        if (!validate(yamlValue)) {
+          invalid(key);
+          prompt.push(promptDate(key));
+        } else {
+          program[key] = yamlValue;
+        }
       }
       break;
     case 'end':
@@ -82,10 +99,13 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
         if (!validate(value)) {
           prompt.push(promptDate(key));
         }
-      } else if (yamlHasOwnKey && !validate(yamlValue)) {
-        prompt.push(promptDate(key));
       } else {
-        program[key] = new Date();
+        if (yamlHasOwnKey && !validate(yamlValue)) {
+          invalid(key);
+          prompt.push(promptDate(key));
+        } else {
+          program[key] = new Date();
+        }
       }
       break;
     case 'types':
@@ -94,13 +114,18 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
           prompt.push(promptTypes());
         }
       } else if (yamlHasOwnKey && !validate(yamlValue)) {
+        invalid(key);
         prompt.push(promptTypes());
       } else {
         program[key] = CONST.FILTER_TYPES;
       }
       break;
     default:
-      program[key] = format(hasOwnKey ? value : yamlValue);
+      if (yamlHasOwnKey && !validate(yamlValue)) {
+        invalid(key);
+      }
+
+      program[key] = format(hasOwnKey && validate(value) ? value : yamlValue);
   }
 });
 
@@ -117,113 +142,21 @@ if (prompt.length) {
           program[key] = format(value);
         });
 
-      CONST.OPTIONS_KEYS.forEach(function(key) {
-        console.log(key, program[key]);
-      });
+      exec();
     })
     .catch(function(error) {
-      console.error(error);
+      utils.error(error);
     });
 } else {
-
+  process.nextTick(exec);
 }
 
-// function promptDate(type, callback) {
-//   return {
-//     type: 'input',
-//     name: type,
-//     message: `Please enter ${ type } date: `,
-//     validate: function(value) {
-//       if (utils.dateIsValid(formatter.date(value))) {
-//         return true;
-//       }
+function exec() {
+  let options = {};
 
-//       return `Oops, value "${ value }" isn't a valid date!`;
-//     }
-//   };
-// }
+  CONST.OPTIONS_KEYS.forEach(function(key) {
+    options[key] = program[key];
+  });
 
-// function promptFilter() {
-//   return {
-//     type: 'list',
-//     name: 'type',
-//     message: 'Please choose filter type: ',
-//     choices: ['mtime', 'ctime', 'atime', 'birthtime']
-//   };
-// }
-
-// let questions = [];
-// let INI = FilesExtractor.loadYAML() || {};
-// let INIStart = INI.start && formatter.date(INI.start);
-// let INIEnd = INI.end && formatter.date(INI.end);
-// let INIType = TYPES.indexOf(INI.type) !== -1 ? INI.type : TYPES[0];
-// let INIIgnore = INI.ignore;
-
-// INIStart = utils.dateIsValid(INIStart) ? INIStart : null;
-// INIEnd = utils.dateIsValid(INIEnd) ? INIEnd : null;
-// INIIgnore = Array.isArray(INIIgnore) ? INIIgnore : (utils.isString(INIIgnore) ? [INIIgnore] : []);
-
-// if (program.hasOwnProperty('start')) {
-//   if (!utils.dateIsValid(program.start)) {
-//     questions.push(promptDate('start'));
-//   }
-// } else {
-//   if (!INIStart) {
-//     questions.push(promptDate('start'));
-//   }
-// }
-
-// if (program.hasOwnProperty('end')) {
-//   if (!utils.dateIsValid(program.end)) {
-//     questions.push(promptDate('end'));
-//   }
-// }
-
-// if (program.hasOwnProperty('type')) {
-//   if (TYPES.indexOf(program.type) === -1) {
-//     questions.push(promptFilter());
-//   }
-// }
-
-// if (questions.length) {
-//   let prompt = inquirer.prompt(questions);
-
-//   prompt.then(function(input) {
-//     let files = formatter.files(program.files || INI.files);
-//     let output = program.output || formatter.output(INI.output);
-//     let start = input.start ? formatter.date(input.start) : (program.start || INIStart);
-//     let end = input.end ? formatter.date(input.end) : (program.end || (INIEnd ? INIEnd : new Date()));
-//     let dot = Boolean(program.dot || INI.dot);
-//     let type = input.type || program.type || INIType;
-//     let ignore = INIIgnore;
-//     let argv = process.argv;
-
-//     // Fiexd can't start cluster.fork because of wait stdin
-//     argv.splice(
-//       2, argv.length - 2,
-//       '-f', files,
-//       '-o', output,
-//       '-s', start.toISOString(),
-//       '-e', end.toISOString(),
-//       '-t', type
-//     );
-
-//     if (dot) {
-//       argv.push('-d');
-//     }
-
-//     return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
-//   });
-// } else {
-//   process.nextTick(function() {
-//     let files = formatter.files(program.files || INI.files);
-//     let output = program.output || formatter.output(INI.output);
-//     let start = program.start ? program.start : INIStart;
-//     let end = program.end ? program.end : (INIEnd || new Date());
-//     let dot = Boolean(program.dot || INI.dot);
-//     let type = program.type || INIType;
-//     let ignore = INIIgnore;
-
-//     return new FilesExtractor({ files, output, start, end, dot, type, ignore }).extract();
-//   });
-// }
+  return new FilesExtractor(options).extract();
+}
