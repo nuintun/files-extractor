@@ -84,13 +84,17 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
           prompt.push(promptDate(key));
         }
       } else {
-        yamlValue = utils.parseDate(yamlValue);
+        if (yamlHasOwnKey) {
+          yamlValue = utils.parseDate(yamlValue);
 
-        if (!validate(yamlValue)) {
-          invalid(key);
-          prompt.push(promptDate(key));
+          if (validate(yamlValue)) {
+            program[key] = yamlValue;
+          } else {
+            invalid(key);
+            prompt.push(promptDate(key));
+          }
         } else {
-          program[key] = yamlValue;
+          prompt.push(promptDate(key));
         }
       }
       break;
@@ -100,9 +104,15 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
           prompt.push(promptDate(key));
         }
       } else {
-        if (yamlHasOwnKey && !validate(yamlValue)) {
-          invalid(key);
-          prompt.push(promptDate(key));
+        if (yamlHasOwnKey) {
+          yamlValue = utils.parseDate(yamlValue);
+
+          if (validate(yamlValue)) {
+            program[key] = yamlValue;
+          } else {
+            invalid(key);
+            prompt.push(promptDate(key));
+          }
         } else {
           program[key] = new Date();
         }
@@ -113,11 +123,19 @@ CONST.OPTIONS_KEYS.forEach(function(key) {
         if (!validate(value)) {
           prompt.push(promptTypes());
         }
-      } else if (yamlHasOwnKey && !validate(yamlValue)) {
-        invalid(key);
-        prompt.push(promptTypes());
       } else {
-        program[key] = CONST.FILTER_TYPES;
+        if (yamlHasOwnKey) {
+          yamlValue = utils.parseTypes(yamlValue);
+
+          if (validate(yamlValue)) {
+            program[key] = yamlValue;
+          } else {
+            invalid(key);
+            prompt.push(promptTypes());
+          }
+        } else {
+          program[key] = CONST.FILTER_TYPES;
+        }
       }
       break;
     default:
@@ -153,10 +171,32 @@ if (prompt.length) {
 
 function exec() {
   let options = {};
+  let argv = process.argv;
+  let hasPrompt = prompt.length;
+
+  if (hasPrompt) {
+    argv = argv.slice(0, 2);
+  }
 
   CONST.OPTIONS_KEYS.forEach(function(key) {
-    options[key] = program[key];
+    let value = program[key];
+
+    options[key] = value;
+
+    if (hasPrompt) {
+      if (key === 'dot') {
+        value && argv.push(`--${ key }`);
+      } else {
+        argv.push(`--${ key }`, value);
+      }
+    }
   });
 
-  return new FilesExtractor(options).extract();
+  if (hasPrompt) {
+    process.argv = argv;
+  }
+
+  options.ignore = formatter.ignore(yaml.ignore);
+
+  return new FilesExtractor(options || getOptions()).extract();
 }
