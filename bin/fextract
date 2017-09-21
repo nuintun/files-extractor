@@ -3,7 +3,7 @@
 'use strict';
 
 // set process title
-process.title = 'file extractor';
+process.title = 'files extractor';
 
 const path = require('path');
 const chalk = require('chalk');

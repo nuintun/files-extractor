@@ -23,7 +23,16 @@ const spinners = require('cli-spinners');
 const CWD = utils.CWD;
 const YAML = 'fextract.yml';
 const YAMLFILE = path.join(CWD, YAML);
+const READOK = fs.constants ? fs.constants.R_OK : fs.R_OK;
 
+/**
+ * Colored output
+ *
+ * @param {String} value
+ * @param {String} color
+ * @param {Boolean} substr
+ * @returns {String}
+ */
 function color(value, color, substr) {
   if (substr !== false) {
     let length = value.length;
@@ -36,6 +45,13 @@ function color(value, color, substr) {
   return chalk.reset.bold[color || 'cyan'](value);
 }
 
+/**
+ * Filter files by stat time
+ *
+ * @param {Array} files
+ * @param {Object} options
+ * @returns {Boolean}
+ */
 function filter(files, options) {
   return files.filter(function(file) {
     let stat;
@@ -57,10 +73,23 @@ function filter(files, options) {
   });
 }
 
+/**
+ * Pad start string with 0
+ *
+ * @param {String|Number} value
+ * @param {Number} length
+ * @returns {String}
+ */
 function padStart(value, length) {
   return utils.padStart(value, length, '0');
 }
 
+/**
+ * Format date
+ *
+ * @param {Date} date
+ * @returns {String}
+ */
 function formatDate(date) {
   let year = date.getFullYear();
   let month = padStart(date.getMonth() + 1, 2);
@@ -72,10 +101,23 @@ function formatDate(date) {
   return `${ year }-${ month }-${ day } ${ hour }.${ minutes }.${ seconds }`;
 }
 
+/**
+ * Path of dest
+ *
+ * @param {String} file
+ * @param {Object} options
+ * @returns {String}
+ */
 function dest(file, options) {
   return path.resolve(CWD, options.output, `${ formatDate(options.start) } & ${ formatDate(options.end) }`, file);
 }
 
+/**
+ * FilesExtractor
+ *
+ * @param {Object} options
+ * @constructor
+ */
 function FilesExtractor(options) {
   let ignore = options.ignore;
   let output = options.output;
@@ -85,18 +127,23 @@ function FilesExtractor(options) {
   this.options = options;
 }
 
+/**
+ * Load yml config
+ *
+ * @returns {Object}
+ */
 FilesExtractor.loadYAML = function() {
-  let ini = {};
+  let ini;
 
   // File config
-  if (fs.pathExistsSync(YAMLFILE)) {
+  if (fs.accessSync(YAMLFILE) === READOK) {
     // Parse yaml
     let source = fs.readFileSync(YAMLFILE);
 
     ini = yaml.safeLoad(source, { filename: YAMLFILE });
   }
 
-  return ini;
+  return ini || {};
 }
 
 const STATUS = {
