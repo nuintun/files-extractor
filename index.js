@@ -53,12 +53,12 @@ function color(value, color, substr) {
  */
 function filter(files, options) {
   return files.filter(function(file) {
-    let stat;
-
     process.send({
       status: STATUS.FILTERING,
       data: file
     });
+
+    let stat;
 
     try {
       stat = fs.statSync(path.join(CWD, file));
@@ -68,7 +68,8 @@ function filter(files, options) {
 
     let time = stat[options.type];
 
-    return time >= options.start && time <= options.end;
+    // Filtering
+    return stat.isFile() && time >= options.start && time <= options.end;
   });
 }
 
