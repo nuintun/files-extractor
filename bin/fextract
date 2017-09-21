@@ -79,7 +79,7 @@ function promptFilter() {
 }
 
 let questions = [];
-let INI = FilesExtractor.loadYAML();
+let INI = FilesExtractor.loadYAML() || {};
 let INIStart = INI.start && formatter.date(INI.start);
 let INIEnd = INI.end && formatter.date(INI.end);
 let INIType = TYPES.indexOf(INI.type) !== -1 ? INI.type : TYPES[0];

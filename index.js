@@ -130,20 +130,20 @@ function FilesExtractor(options) {
 /**
  * Load yml config
  *
- * @returns {Object}
+ * @returns {Object|undefined}
  */
 FilesExtractor.loadYAML = function() {
-  let ini;
+  let code;
 
-  // File config
-  if (fs.accessSync(YAMLFILE) === READOK) {
-    // Parse yaml
-    let source = fs.readFileSync(YAMLFILE);
-
-    ini = yaml.safeLoad(source, { filename: YAMLFILE });
+  try {
+    // Read source file
+    code = fs.readFileSync(YAMLFILE);
+  } catch (error) {
+    // No permissions or other read errors
   }
 
-  return ini || {};
+  // Parse yaml
+  return code && yaml.safeLoad(code, { filename: YAMLFILE });
 }
 
 const STATUS = {
