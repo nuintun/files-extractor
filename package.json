@@ -32,7 +32,6 @@
   "bugs": {
     "url": "https://github.com/nuintun/files-extractor/issues"
   },
-  "preferGlobal": true,
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
     "ora": "^1.3.0",
