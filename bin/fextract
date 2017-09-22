@@ -43,35 +43,41 @@ if (cluster.isMaster) {
   let prompt = [];
   let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
-  function promptDate(name) {
+  function promptInput(name, parser) {
     return {
       name: name,
       type: 'input',
-      message: `Please enter ${ name } date: `,
+      message: `Please input ${ name }: `,
       validate: function(value) {
-        if (validator[name](utils.parseDate(value))) {
+        if (validator[name](parser ? parser(value) : value)) {
           return true;
         }
 
-        return `Oops, value "${ value }" isn't a valid date!`;
+        return `Oops, value ${ JSON.stringify(value) } is invalid!`;
       }
     };
   }
 
-  function promptTypes() {
+  function promptCheckbox(name, choices, required) {
     return {
-      name: 'types',
+      name: name,
       type: 'checkbox',
-      message: 'Please choose filter types: ',
-      choices: CONST.FILTER_TYPES,
+      message: `Please choose ${ name }: `,
+      choices: choices,
       validate: function(value) {
-        if (value.length < 1) {
-          return 'Oops, you must choose at least one type!';
+        if (required && value.length < 1) {
+          return 'Oops, you must choose at least one item!';
         }
 
         return true;
       }
     };
+  }
+
+  function valueInvalid(key, yaml) {
+    let ref = yaml ? ` at ${ CONST.YAML }` : '';
+
+    utils.error(`Option ${ key }'s value is invalid${ ref }!`);
   }
 
   CONST.OPTIONS_KEYS.forEach(function(key) {
@@ -84,47 +90,63 @@ if (cluster.isMaster) {
 
     switch (key) {
       case 'start':
-        if (hasOwnKey) {
-          if (!validate(value)) {
-            prompt.push(promptDate(key));
-          }
-        } else {
-          if (yamlHasOwnKey) {
-            program[key] = yamlValue;
-          } else {
-            prompt.push(promptDate(key));
-          }
-        }
-        break;
       case 'end':
         if (hasOwnKey) {
           if (!validate(value)) {
-            prompt.push(promptDate(key));
+            valueInvalid(key);
+            prompt.push(promptInput(key, utils.parseDate));
           }
         } else {
           if (yamlHasOwnKey) {
-            program[key] = yamlValue;
+            yamlValue = utils.parseDate(yamlValue);
+
+            if (!validate(yamlValue)) {
+              valueInvalid(key, true);
+              prompt.push(promptInput(key, utils.parseDate));
+            }
           } else {
-            program[key] = format(value);
+            if (key === 'start') {
+              prompt.push(promptInput(key, utils.parseDate));
+            } else {
+              program[key] = format(value);
+            }
           }
         }
         break;
       case 'types':
         if (hasOwnKey) {
           if (!validate(value)) {
-            prompt.push(promptTypes());
+            valueInvalid(key);
+            prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
           }
         } else {
           if (yamlHasOwnKey) {
-            program[key] = yamlValue;
+            yamlValue = utils.parseTypes(yamlValue);
+
+            if (!validate(yamlValue)) {
+              valueInvalid(key, true);
+              prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
+            }
           } else {
             program[key] = format(value);
           }
         }
         break;
       default:
-        if (!hasOwnKey || !validate(value)) {
-          program[key] = yamlHasOwnKey ? yamlValue : format(value);
+        if (hasOwnKey) {
+          if (!validate(value)) {
+            valueInvalid(key);
+            prompt.push(promptInput(key));
+          }
+        } else {
+          if (yamlHasOwnKey) {
+            if (!validate(yamlValue)) {
+              valueInvalid(key, true);
+              prompt.push(promptInput(key));
+            }
+          } else {
+            program[key] = format(value);
+          }
         }
     }
   });
