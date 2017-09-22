@@ -5,198 +5,234 @@
 // set process title
 process.title = 'files extractor';
 
-const chalk = require('chalk');
-const program = require('commander');
-const pkg = require('../package.json');
-const utils = require('../lib/utils');
-const inquirer = require('inquirer');
+const cluster = require('cluster');
 const CONST = require('../lib/const');
-const formatter = require('../lib/formatter');
-const validator = require('../lib/validator');
-const FilesExtractor = require('../lib/fextract');
 
-program
-  .version(pkg.version)
-  .description(chalk.reset.cyan.bold(pkg.description))
-  .option('-d, --dot', 'extract dot files')
-  .option('-f, --files <files>', 'set the files of extract')
-  .option('-o, --output <path>', 'set the output dir of extract')
-  .option('-s, --start <date>', 'set the start date of extract', utils.parseDate)
-  .option('-e, --end <date>', 'set the end date of extract', utils.parseDate)
-  .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, utils.parseTypes);
+if (cluster.isMaster) {
+  let chalk = require('chalk');
+  let program = require('commander');
+  let pkg = require('../package.json');
+  let utils = require('../lib/utils');
+  let inquirer = require('inquirer');
+  let formatter = require('../lib/formatter');
+  let validator = require('../lib/validator');
 
-program.on('--help', function() {
-  process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
-});
+  cluster.setupMaster({
+    silent: true
+  });
 
-program.parse(process.argv);
+  let worker = cluster.fork();
 
-const prompt = [];
-const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
+  worker.on('message', function(message) {
+    utils.warning(message);
+  });
 
-function promptDate(name) {
-  return {
-    name: name,
-    type: 'input',
-    message: `Please enter ${ name } date: `,
-    validate: function(value) {
-      if (validator[name](formatter[name](value))) {
+  program
+    .version(pkg.version)
+    .description(chalk.reset.cyan.bold(pkg.description))
+    .option('-d, --dot', 'extract dot files')
+    .option('-f, --files <files>', 'set the files of extract')
+    .option('-o, --output <path>', 'set the output dir of extract')
+    .option('-s, --start <date>', 'set the start date of extract', utils.parseDate)
+    .option('-e, --end <date>', 'set the end date of extract', utils.parseDate)
+    .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, utils.parseTypes);
+
+  program.on('--help', function() {
+    process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
+  });
+
+  program.parse(process.argv);
+
+  let prompt = [];
+  let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
+
+  function promptDate(name) {
+    return {
+      name: name,
+      type: 'input',
+      message: `Please enter ${ name } date: `,
+      validate: function(value) {
+        if (validator[name](utils.parseDate(value))) {
+          return true;
+        }
+
+        return `Oops, value "${ value }" isn't a valid date!`;
+      }
+    };
+  }
+
+  function promptTypes() {
+    return {
+      name: 'types',
+      type: 'checkbox',
+      message: 'Please choose filter types: ',
+      choices: CONST.FILTER_TYPES,
+      validate: function(value) {
+        if (value.length < 1) {
+          return 'Oops, you must choose at least one type!';
+        }
+
         return true;
       }
-
-      return `Oops, value "${ value }" isn't a valid date!`;
-    }
-  };
-}
-
-function promptTypes() {
-  return {
-    name: 'types',
-    type: 'checkbox',
-    message: 'Please choose filter types: ',
-    choices: CONST.FILTER_TYPES,
-    validate: function(value) {
-      if (value.length < 1) {
-        return 'Oops, you must choose at least one type!';
-      }
-
-      return true;
-    }
-  };
-}
-
-function invalid(key) {
-  utils.warning(`Option ${ key }'s value is invalid in ${ CONST.YAML }!`);
-}
-
-CONST.OPTIONS_KEYS.forEach(function(key) {
-  let value = program[key];
-  let yamlValue = yaml[key];
-  let format = formatter[key];
-  let validate = validator[key];
-  let hasOwnKey = program.hasOwnProperty(key);
-  let yamlHasOwnKey = yaml.hasOwnProperty(key);
-
-  switch (key) {
-    case 'start':
-      if (hasOwnKey) {
-        if (!validate(value)) {
-          prompt.push(promptDate(key));
-        }
-      } else {
-        if (yamlHasOwnKey) {
-          yamlValue = utils.parseDate(yamlValue);
-
-          if (validate(yamlValue)) {
-            program[key] = yamlValue;
-          } else {
-            invalid(key);
-            prompt.push(promptDate(key));
-          }
-        } else {
-          prompt.push(promptDate(key));
-        }
-      }
-      break;
-    case 'end':
-      if (hasOwnKey) {
-        if (!validate(value)) {
-          prompt.push(promptDate(key));
-        }
-      } else {
-        if (yamlHasOwnKey) {
-          yamlValue = utils.parseDate(yamlValue);
-
-          if (validate(yamlValue)) {
-            program[key] = yamlValue;
-          } else {
-            invalid(key);
-            prompt.push(promptDate(key));
-          }
-        } else {
-          program[key] = new Date();
-        }
-      }
-      break;
-    case 'types':
-      if (hasOwnKey) {
-        if (!validate(value)) {
-          prompt.push(promptTypes());
-        }
-      } else {
-        if (yamlHasOwnKey) {
-          yamlValue = utils.parseTypes(yamlValue);
-
-          if (validate(yamlValue)) {
-            program[key] = yamlValue;
-          } else {
-            invalid(key);
-            prompt.push(promptTypes());
-          }
-        } else {
-          program[key] = CONST.FILTER_TYPES;
-        }
-      }
-      break;
-    default:
-      if (yamlHasOwnKey && !validate(yamlValue)) {
-        invalid(key);
-      }
-
-      program[key] = format(hasOwnKey && validate(value) ? value : yamlValue);
+    };
   }
-});
 
-if (prompt.length) {
-  inquirer
-    .prompt(prompt)
-    .then(function(input) {
-      Object
-        .keys(input)
-        .forEach(function(key) {
-          let value = input[key];
-          let format = formatter[key];
-
-          program[key] = format(value);
-        });
-
-      exec();
-    })
-    .catch(function(error) {
-      utils.error(error);
-    });
-} else {
-  process.nextTick(exec);
-}
-
-function exec() {
-  let options = {};
-  let argv = process.argv;
-  let hasPrompt = prompt.length;
-
-  if (hasPrompt) {
-    argv = argv.slice(0, 2);
+  function invalid(key) {
+    utils.warning(`Option ${ key }'s value is invalid in ${ CONST.YAML }!`);
   }
 
   CONST.OPTIONS_KEYS.forEach(function(key) {
     let value = program[key];
+    let yamlValue = yaml[key];
+    let format = formatter[key];
+    let validate = validator[key];
+    let hasOwnKey = program.hasOwnProperty(key);
+    let yamlHasOwnKey = yaml.hasOwnProperty(key);
 
-    options[key] = value;
+    switch (key) {
+      case 'start':
+        if (hasOwnKey) {
+          if (!validate(value)) {
+            prompt.push(promptDate(key));
+          }
+        } else {
+          if (yamlHasOwnKey) {
+            yamlValue = utils.parseDate(yamlValue);
 
-    if (hasPrompt) {
-      if (key === 'dot') {
-        value && argv.push(`--${ key }`);
-      } else {
-        argv.push(`--${ key }`, value);
-      }
+            if (validate(yamlValue)) {
+              program[key] = yamlValue;
+            } else {
+              invalid(key);
+              prompt.push(promptDate(key));
+            }
+          } else {
+            prompt.push(promptDate(key));
+          }
+        }
+        break;
+      case 'end':
+        if (hasOwnKey) {
+          if (!validate(value)) {
+            prompt.push(promptDate(key));
+          }
+        } else {
+          if (yamlHasOwnKey) {
+            yamlValue = utils.parseDate(yamlValue);
+
+            if (validate(yamlValue)) {
+              program[key] = yamlValue;
+            } else {
+              invalid(key);
+              prompt.push(promptDate(key));
+            }
+          } else {
+            program[key] = new Date();
+          }
+        }
+        break;
+      case 'types':
+        if (hasOwnKey) {
+          if (!validate(value)) {
+            prompt.push(promptTypes());
+          }
+        } else {
+          if (yamlHasOwnKey) {
+            yamlValue = utils.parseTypes(yamlValue);
+
+            if (validate(yamlValue)) {
+              program[key] = yamlValue;
+            } else {
+              invalid(key);
+              prompt.push(promptTypes());
+            }
+          } else {
+            program[key] = CONST.FILTER_TYPES;
+          }
+        }
+        break;
+      default:
+        if (yamlHasOwnKey && !validate(yamlValue)) {
+          invalid(key);
+        }
+
+        program[key] = format(hasOwnKey && validate(value) ? value : yamlValue);
     }
   });
 
-  if (hasPrompt) {
-    process.argv = argv;
+  function bootstrap() {
+    let options = {};
+
+    CONST.OPTIONS_KEYS.forEach(function(key) {
+      options[key] = program[key];
+    });
+
+    options.ignore = formatter.ignore(yaml.ignore);
+
+    return {
+      status: CONST.STATUS.BOOTSTRAP,
+      data: options
+    };
   }
 
-  options.ignore = formatter.ignore(yaml.ignore);
+  if (prompt.length) {
+    inquirer
+      .prompt(prompt)
+      .then(function(input) {
+        Object
+          .keys(input)
+          .forEach(function(key) {
+            let value = input[key];
+            let format = formatter[key];
 
-  return new FilesExtractor(options || getOptions()).extract();
+            program[key] = format(value);
+          });
+
+        worker.send(bootstrap());
+      })
+      .catch(function(error) {
+        utils.error(error);
+      });
+  } else {
+    worker.send(bootstrap());
+  }
+} else {
+  let FilesExtractor = require('../lib/fextract');
+
+  process.once('message', function(message) {
+    if (message.status === CONST.STATUS.BOOTSTRAP) {
+      return new FilesExtractor(message.data);
+    }
+  });
 }
+
+// function exec() {
+//   let options = {};
+//   let argv = process.argv;
+//   let hasPrompt = prompt.length;
+
+//   if (hasPrompt) {
+//     argv = argv.slice(0, 2);
+//   }
+
+//   CONST.OPTIONS_KEYS.forEach(function(key) {
+//     let value = program[key];
+
+//     options[key] = value;
+
+//     if (hasPrompt) {
+//       if (key === 'dot') {
+//         value && argv.push(`--${ key }`);
+//       } else {
+//         argv.push(`--${ key }`, value);
+//       }
+//     }
+//   });
+
+//   if (hasPrompt) {
+//     process.argv = argv;
+//   }
+
+//   options.ignore = formatter.ignore(yaml.ignore);
+
+//   return new FilesExtractor(options || getOptions()).extract();
+// }
