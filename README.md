@@ -22,14 +22,14 @@
 
   Options:
 
-    -V, --version        output the version number
-    -f, --files <files>  set the files of extract
-    -o, --output <path>  set the output dir of extract
-    -s, --start <date>   set the start date of extract
-    -e, --end <date>     set the end date of extract
-    -t, --type <type>    set the filter type of extract
-    -d, --dot            extract dot files
-    -h, --help           output usage information
+    -V, --version           output the version number
+    -d, --dot               extract dot files
+    -f, --files <files>     set the files of extract
+    -o, --output <path>     set the output dir of extract
+    -s, --start <date>      set the start date of extract
+    -e, --end <date>        set the end date of extract
+    -t, --types <type,...>  set the filter types[mtime, ctime, atime, birthtime] of extract
+    -h, --help              output usage information
 
 
   Documentation can be found at https://github.com/nuintun/files-extractor#readme.
