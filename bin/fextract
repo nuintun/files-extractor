@@ -10,6 +10,7 @@ const CONST = require('../lib/const');
 
 if (cluster.isMaster) {
   let chalk = require('chalk');
+  let UI = require('../lib/ui');
   let program = require('commander');
   let pkg = require('../package.json');
   let utils = require('../lib/utils');
@@ -17,15 +18,11 @@ if (cluster.isMaster) {
   let formatter = require('../lib/formatter');
   let validator = require('../lib/validator');
 
-  cluster.setupMaster({
-    silent: true
-  });
+  cluster.setupMaster({ silent: false });
 
   let worker = cluster.fork();
 
-  worker.on('message', function(message) {
-    utils.error(message);
-  });
+  new UI(worker);
 
   program
     .version(pkg.version)
