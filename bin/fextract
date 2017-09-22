@@ -24,7 +24,7 @@ if (cluster.isMaster) {
   let worker = cluster.fork();
 
   worker.on('message', function(message) {
-    utils.warning(message);
+    utils.error(message);
   });
 
   program
@@ -97,14 +97,7 @@ if (cluster.isMaster) {
           }
         } else {
           if (yamlHasOwnKey) {
-            yamlValue = utils.parseDate(yamlValue);
-
-            if (validate(yamlValue)) {
-              program[key] = yamlValue;
-            } else {
-              invalid(key);
-              prompt.push(promptDate(key));
-            }
+            program[key] = yamlValue;
           } else {
             prompt.push(promptDate(key));
           }
@@ -117,14 +110,7 @@ if (cluster.isMaster) {
           }
         } else {
           if (yamlHasOwnKey) {
-            yamlValue = utils.parseDate(yamlValue);
-
-            if (validate(yamlValue)) {
-              program[key] = yamlValue;
-            } else {
-              invalid(key);
-              prompt.push(promptDate(key));
-            }
+            program[key] = yamlValue;
           } else {
             program[key] = new Date();
           }
@@ -137,24 +123,13 @@ if (cluster.isMaster) {
           }
         } else {
           if (yamlHasOwnKey) {
-            yamlValue = utils.parseTypes(yamlValue);
-
-            if (validate(yamlValue)) {
-              program[key] = yamlValue;
-            } else {
-              invalid(key);
-              prompt.push(promptTypes());
-            }
+            program[key] = yamlValue;
           } else {
             program[key] = CONST.FILTER_TYPES;
           }
         }
         break;
       default:
-        if (yamlHasOwnKey && !validate(yamlValue)) {
-          invalid(key);
-        }
-
         program[key] = format(hasOwnKey && validate(value) ? value : yamlValue);
     }
   });
@@ -165,8 +140,6 @@ if (cluster.isMaster) {
     CONST.OPTIONS_KEYS.forEach(function(key) {
       options[key] = program[key];
     });
-
-    options.ignore = formatter.ignore(yaml.ignore);
 
     return {
       status: CONST.STATUS.BOOTSTRAP,
