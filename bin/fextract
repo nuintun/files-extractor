@@ -189,8 +189,8 @@ if (cluster.isMaster) {
 
         worker.send(bootstrap());
       })
-      .catch(function(error) {
-        utils.error(error);
+      .catch(function(exception) {
+        utils.error(exception);
       });
   } else {
     worker.send(bootstrap());
