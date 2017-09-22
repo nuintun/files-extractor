@@ -6,7 +6,6 @@
 process.title = 'files extractor';
 
 const cluster = require('cluster');
-const CONST = require('../lib/const');
 
 if (cluster.isMaster) {
   let chalk = require('chalk');
@@ -15,6 +14,7 @@ if (cluster.isMaster) {
   let pkg = require('../package.json');
   let utils = require('../lib/utils');
   let inquirer = require('inquirer');
+  let CONST = require('../lib/const');
   let formatter = require('../lib/formatter');
   let validator = require('../lib/validator');
 
@@ -74,10 +74,6 @@ if (cluster.isMaster) {
     };
   }
 
-  function invalid(key) {
-    utils.warning(`Option ${ key }'s value is invalid in ${ CONST.YAML }!`);
-  }
-
   CONST.OPTIONS_KEYS.forEach(function(key) {
     let value = program[key];
     let yamlValue = yaml[key];
@@ -109,7 +105,7 @@ if (cluster.isMaster) {
           if (yamlHasOwnKey) {
             program[key] = yamlValue;
           } else {
-            program[key] = new Date();
+            program[key] = format(value);
           }
         }
         break;
@@ -122,12 +118,14 @@ if (cluster.isMaster) {
           if (yamlHasOwnKey) {
             program[key] = yamlValue;
           } else {
-            program[key] = CONST.FILTER_TYPES;
+            program[key] = format(value);
           }
         }
         break;
       default:
-        program[key] = format(hasOwnKey && validate(value) ? value : yamlValue);
+        if (!hasOwnKey || !validate(value)) {
+          program[key] = yamlHasOwnKey ? yamlValue : format(value);
+        }
     }
   });
 
@@ -166,43 +164,5 @@ if (cluster.isMaster) {
     worker.send(bootstrap());
   }
 } else {
-  let FilesExtractor = require('../lib/fextract');
-
-  process.once('message', function(message) {
-    if (message.status === CONST.STATUS.BOOTSTRAP) {
-      return new FilesExtractor(message.data);
-    }
-  });
+  require('../lib/thread');
 }
-
-// function exec() {
-//   let options = {};
-//   let argv = process.argv;
-//   let hasPrompt = prompt.length;
-
-//   if (hasPrompt) {
-//     argv = argv.slice(0, 2);
-//   }
-
-//   CONST.OPTIONS_KEYS.forEach(function(key) {
-//     let value = program[key];
-
-//     options[key] = value;
-
-//     if (hasPrompt) {
-//       if (key === 'dot') {
-//         value && argv.push(`--${ key }`);
-//       } else {
-//         argv.push(`--${ key }`, value);
-//       }
-//     }
-//   });
-
-//   if (hasPrompt) {
-//     process.argv = argv;
-//   }
-
-//   options.ignore = formatter.ignore(yaml.ignore);
-
-//   return new FilesExtractor(options || getOptions()).extract();
-// }
