@@ -57,7 +57,7 @@ function extractor(options) {
     if (hasOwnKey) {
       errors += assign(options, key, value);
     } else if (yamlHasOwnKey) {
-      errors += assign(options, key, yamlValue, true);
+      errors += assign(options, key, yamlValue, CONST.YAML);
     } else {
       options[key] = format(value);
     }

@@ -82,6 +82,10 @@ if (cluster.isMaster) {
     let hasOwnKey = program.hasOwnProperty(key);
     let yamlHasOwnKey = yaml.hasOwnProperty(key);
 
+    function save(value) {
+      program[key] = value;
+    }
+
     switch (key) {
       case 'start':
       case 'end':
@@ -90,20 +94,20 @@ if (cluster.isMaster) {
             valueInvalid(key);
             prompt.push(promptInput(key, parseDate));
           }
-        } else {
-          if (yamlHasOwnKey) {
-            yamlValue = parseDate(yamlValue);
+        } else if (yamlHasOwnKey) {
+          yamlValue = parseDate(yamlValue);
 
-            if (!validate(yamlValue)) {
-              valueInvalid(key, true);
-              prompt.push(promptInput(key, parseDate));
-            }
+          if (validate(yamlValue)) {
+            save(yamlValue);
           } else {
-            if (key === 'start') {
-              prompt.push(promptInput(key, parseDate));
-            } else {
-              program[key] = format(value);
-            }
+            valueInvalid(key, CONST.YAML);
+            prompt.push(promptInput(key, parseDate));
+          }
+        } else {
+          if (key === 'start') {
+            prompt.push(promptInput(key, parseDate));
+          } else {
+            save(format(value));
           }
         }
         break;
@@ -113,17 +117,17 @@ if (cluster.isMaster) {
             valueInvalid(key);
             prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
           }
-        } else {
-          if (yamlHasOwnKey) {
-            yamlValue = parseTypes(yamlValue);
+        } else if (yamlHasOwnKey) {
+          yamlValue = parseTypes(yamlValue);
 
-            if (!validate(yamlValue)) {
-              valueInvalid(key, true);
-              prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
-            }
+          if (validate(yamlValue)) {
+            save(yamlValue);
           } else {
-            program[key] = format(value);
+            valueInvalid(key, CONST.YAML);
+            prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
           }
+        } else {
+          save(format(value));
         }
         break;
       default:
@@ -132,15 +136,16 @@ if (cluster.isMaster) {
             valueInvalid(key);
             prompt.push(promptInput(key));
           }
-        } else {
-          if (yamlHasOwnKey) {
-            if (!validate(yamlValue)) {
-              valueInvalid(key, true);
-              prompt.push(promptInput(key));
-            }
+        } else if (yamlHasOwnKey) {
+
+          if (validate(yamlValue)) {
+            save(yamlValue);
           } else {
-            program[key] = format(value);
+            valueInvalid(key, CONST.YAML);
+            prompt.push(promptInput(key));
           }
+        } else {
+          save(format(value));
         }
     }
   });
