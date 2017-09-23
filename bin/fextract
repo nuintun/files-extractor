@@ -10,7 +10,6 @@ const cluster = require('cluster');
 if (cluster.isMaster) {
   cluster.setupMaster({ silent: false });
 
-  const chalk = require('chalk');
   const UI = require('../lib/ui');
   const program = require('commander');
   const pkg = require('../package.json');
@@ -26,7 +25,7 @@ if (cluster.isMaster) {
 
   program
     .version(pkg.version)
-    .description(chalk.reset.cyan.bold(pkg.description))
+    .description(utils.color(pkg.description, 'cyan', false, true))
     .option('-d, --dot', 'extract dot files')
     .option('-f, --files <files>', 'set the files of extract')
     .option('-o, --output <path>', 'set the output dir of extract')
@@ -35,7 +34,7 @@ if (cluster.isMaster) {
     .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, parseTypes);
 
   program.on('--help', function() {
-    process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
+    process.stdout.write(`\n\n  Documentation can be found at ${ utils.color(pkg.homepage, 'magenta', false, true) }.\n`);
   });
 
   program.parse(process.argv);
