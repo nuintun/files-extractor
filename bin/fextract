@@ -51,7 +51,7 @@ if (cluster.isMaster) {
       type: 'datetime',
       initial: initial,
       message: `Please input options.${ name }: `,
-      format: ['yyyy', '/', 'mm', '/', 'dd', ' ', 'hh', ':', 'MM', ':', 'l', ' ', 'TT']
+      format: ['yyyy', '/', 'mm', '/', 'dd', ' ', 'hh', ':', 'MM', ':', 'ss', ' ', 'TT']
     });
   }
 
