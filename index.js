@@ -16,6 +16,7 @@ const child_process = require('child_process');
 
 const parseDate = utils.parseDate;
 const parseTypes = utils.parseTypes;
+const parseIgnore = utils.parseIgnore;
 const valueInvalid = utils.valueInvalid;
 
 let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
@@ -31,6 +32,8 @@ function assign(options, key, value, source) {
     case 'types':
       value = options[key] = parseTypes(value);
       break;
+    case 'ignore':
+      value = options[key] = parseIgnore(value);
   }
 
   if (!validate(value)) {

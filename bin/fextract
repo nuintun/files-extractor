@@ -21,6 +21,7 @@ if (cluster.isMaster) {
 
   const parseDate = utils.parseDate;
   const parseTypes = utils.parseTypes;
+  const parseIgnore = utils.parseIgnore;
   const valueInvalid = utils.valueInvalid;
 
   program
@@ -43,10 +44,10 @@ if (cluster.isMaster) {
   let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
   function promptInput(name, parser) {
-    return {
+    prompt.push({
       name: name,
       type: 'input',
-      message: `Please input ${ name }: `,
+      message: `Please input options.${ name }: `,
       validate: function(value) {
         if (validator[name](parser ? parser(value) : value)) {
           return true;
@@ -54,23 +55,32 @@ if (cluster.isMaster) {
 
         return `Oops, value ${ JSON.stringify(value) } is invalid!`;
       }
-    };
+    });
   }
 
   function promptCheckbox(name, choices, required) {
-    return {
+    prompt.push({
       name: name,
       type: 'checkbox',
-      message: `Please choose ${ name }: `,
+      message: `Please select options.${ name }: `,
       choices: choices,
       validate: function(value) {
         if (required && value.length < 1) {
-          return 'Oops, you must choose at least one item!';
+          return 'Oops, you must select at least one item!';
         }
 
         return true;
       }
-    };
+    });
+  }
+
+  function promptList(name, choices) {
+    prompt.push({
+      name: name,
+      type: 'list',
+      message: `Please select options.${ name }: `,
+      choices: choices
+    });
   }
 
   CONST.OPTIONS_KEYS.forEach(function(key) {
@@ -91,7 +101,7 @@ if (cluster.isMaster) {
         if (hasOwnKey) {
           if (!validate(value)) {
             valueInvalid(key);
-            prompt.push(promptInput(key, parseDate));
+            promptInput(key, parseDate);
           }
         } else if (yamlHasOwnKey) {
           yamlValue = parseDate(yamlValue);
@@ -100,11 +110,11 @@ if (cluster.isMaster) {
             save(yamlValue);
           } else {
             valueInvalid(key, CONST.YAML);
-            prompt.push(promptInput(key, parseDate));
+            promptInput(key, parseDate);
           }
         } else {
           if (key === 'start') {
-            prompt.push(promptInput(key, parseDate));
+            promptInput(key, parseDate);
           } else {
             save(format(value));
           }
@@ -114,7 +124,7 @@ if (cluster.isMaster) {
         if (hasOwnKey) {
           if (!validate(value)) {
             valueInvalid(key);
-            prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
+            promptCheckbox(key, CONST.FILTER_TYPES, true);
           }
         } else if (yamlHasOwnKey) {
           yamlValue = parseTypes(yamlValue);
@@ -123,7 +133,20 @@ if (cluster.isMaster) {
             save(yamlValue);
           } else {
             valueInvalid(key, CONST.YAML);
-            prompt.push(promptCheckbox(key, CONST.FILTER_TYPES, true));
+            promptCheckbox(key, CONST.FILTER_TYPES, true);
+          }
+        } else {
+          save(format(value));
+        }
+        break;
+      case 'ignore':
+        if (yamlHasOwnKey) {
+          yamlValue = parseIgnore(yamlValue);
+
+          if (validate(yamlValue)) {
+            save(yamlValue);
+          } else {
+            valueInvalid(key, CONST.YAML);
           }
         } else {
           save(format(value));
@@ -133,14 +156,36 @@ if (cluster.isMaster) {
         if (hasOwnKey) {
           if (!validate(value)) {
             valueInvalid(key);
-            prompt.push(promptInput(key));
+
+            if (key === 'dot') {
+              promptList(key, [{
+                name: 'true',
+                value: true
+              }, {
+                name: 'false',
+                value: false
+              }]);
+            } else {
+              promptInput(key);
+            }
           }
         } else if (yamlHasOwnKey) {
           if (validate(yamlValue)) {
             save(yamlValue);
           } else {
             valueInvalid(key, CONST.YAML);
-            prompt.push(promptInput(key));
+
+            if (key === 'dot') {
+              promptList(key, [{
+                name: 'true',
+                value: true
+              }, {
+                name: 'false',
+                value: false
+              }]);
+            } else {
+              promptInput(key);
+            }
           }
         } else {
           save(format(value));
