@@ -75,12 +75,13 @@ if (cluster.isMaster) {
     });
   }
 
-  function promptList(name, choices) {
+  function promptList(name, choices, defaults) {
     prompt.push({
       name: name,
       type: 'list',
       message: `Please select options.${ name }: `,
-      choices: choices
+      choices: choices,
+      default: defaults
     });
   }
 
@@ -165,7 +166,7 @@ if (cluster.isMaster) {
               }, {
                 name: 'false',
                 value: false
-              }]);
+              }], 1);
             } else {
               promptInput(key);
             }
@@ -183,7 +184,7 @@ if (cluster.isMaster) {
               }, {
                 name: 'false',
                 value: false
-              }]);
+              }], 1);
             } else {
               promptInput(key);
             }
