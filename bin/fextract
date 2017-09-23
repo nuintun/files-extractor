@@ -136,7 +136,6 @@ if (cluster.isMaster) {
             prompt.push(promptInput(key));
           }
         } else if (yamlHasOwnKey) {
-
           if (validate(yamlValue)) {
             save(yamlValue);
           } else {
