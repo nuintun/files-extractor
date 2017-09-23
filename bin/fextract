@@ -8,21 +8,21 @@ process.title = 'files extractor';
 const cluster = require('cluster');
 
 if (cluster.isMaster) {
-  let chalk = require('chalk');
-  let UI = require('../lib/ui');
-  let program = require('commander');
-  let pkg = require('../package.json');
-  let utils = require('../lib/utils');
-  let inquirer = require('inquirer');
-  let CONST = require('../lib/const');
-  let formatter = require('../lib/formatter');
-  let validator = require('../lib/validator');
-
   cluster.setupMaster({ silent: false });
 
-  let worker = cluster.fork();
+  const chalk = require('chalk');
+  const UI = require('../lib/ui');
+  const program = require('commander');
+  const pkg = require('../package.json');
+  const utils = require('../lib/utils');
+  const inquirer = require('inquirer');
+  const CONST = require('../lib/const');
+  const formatter = require('../lib/formatter');
+  const validator = require('../lib/validator');
 
-  new UI(worker);
+  const parseDate = utils.parseDate;
+  const parseTypes = utils.parseTypes;
+  const valueInvalid = utils.valueInvalid;
 
   program
     .version(pkg.version)
@@ -30,9 +30,9 @@ if (cluster.isMaster) {
     .option('-d, --dot', 'extract dot files')
     .option('-f, --files <files>', 'set the files of extract')
     .option('-o, --output <path>', 'set the output dir of extract')
-    .option('-s, --start <date>', 'set the start date of extract', utils.parseDate)
-    .option('-e, --end <date>', 'set the end date of extract', utils.parseDate)
-    .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, utils.parseTypes);
+    .option('-s, --start <date>', 'set the start date of extract', parseDate)
+    .option('-e, --end <date>', 'set the end date of extract', parseDate)
+    .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, parseTypes);
 
   program.on('--help', function() {
     process.stdout.write(`\n\n  Documentation can be found at ${ chalk.reset.magenta.bold(pkg.homepage) }.\n`);
@@ -74,12 +74,6 @@ if (cluster.isMaster) {
     };
   }
 
-  function valueInvalid(key, yaml) {
-    let ref = yaml ? ` at ${ CONST.YAML }` : '';
-
-    utils.error(`Option ${ key }'s value is invalid${ ref }!`);
-  }
-
   CONST.OPTIONS_KEYS.forEach(function(key) {
     let value = program[key];
     let yamlValue = yaml[key];
@@ -94,19 +88,19 @@ if (cluster.isMaster) {
         if (hasOwnKey) {
           if (!validate(value)) {
             valueInvalid(key);
-            prompt.push(promptInput(key, utils.parseDate));
+            prompt.push(promptInput(key, parseDate));
           }
         } else {
           if (yamlHasOwnKey) {
-            yamlValue = utils.parseDate(yamlValue);
+            yamlValue = parseDate(yamlValue);
 
             if (!validate(yamlValue)) {
               valueInvalid(key, true);
-              prompt.push(promptInput(key, utils.parseDate));
+              prompt.push(promptInput(key, parseDate));
             }
           } else {
             if (key === 'start') {
-              prompt.push(promptInput(key, utils.parseDate));
+              prompt.push(promptInput(key, parseDate));
             } else {
               program[key] = format(value);
             }
@@ -121,7 +115,7 @@ if (cluster.isMaster) {
           }
         } else {
           if (yamlHasOwnKey) {
-            yamlValue = utils.parseTypes(yamlValue);
+            yamlValue = parseTypes(yamlValue);
 
             if (!validate(yamlValue)) {
               valueInvalid(key, true);
@@ -164,6 +158,8 @@ if (cluster.isMaster) {
     };
   }
 
+  const worker = cluster.fork();
+
   if (prompt.length) {
     inquirer
       .prompt(prompt)
@@ -185,6 +181,8 @@ if (cluster.isMaster) {
   } else {
     worker.send(bootstrap());
   }
+
+  new UI(worker);
 } else {
   require('../lib/thread');
 }

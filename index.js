@@ -14,39 +14,60 @@ const formatter = require('./lib/formatter');
 const validator = require('./lib/validator');
 const child_process = require('child_process');
 
+const parseDate = utils.parseDate;
+const parseTypes = utils.parseTypes;
+const valueInvalid = utils.valueInvalid;
+
 let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
+function assign(options, key, value, source) {
+  let validate = validator[key];
+
+  switch (key) {
+    case 'start':
+    case 'end':
+      value = options[key] = parseDate(value);
+      break;
+    case 'types':
+      value = options[key] = parseTypes(value);
+      break;
+  }
+
+  if (!validate(value)) {
+    valueInvalid(key, source);
+
+    return 1;
+  }
+
+  return 0;
+}
+
 function extractor(options) {
+  let errors = 0;
+
   options = options || {};
 
   CONST.OPTIONS_KEYS.forEach(function(key) {
     let value = options[key];
     let yamlValue = yaml[key];
     let format = formatter[key];
-    let validate = validator[key];
     let hasOwnKey = options.hasOwnProperty(key);
     let yamlHasOwnKey = yaml.hasOwnProperty(key);
 
     if (hasOwnKey) {
-      switch (key) {
-        case 'start':
-          value = options[key] = utils.parseDate(value);
-          break;
-        case 'end':
-          value = options[key] = utils.parseDate(value);
-          break;
-        case 'types':
-          value = options[key] = utils.parseTypes(value);
-          break;
-      }
+      errors += assign(options, key, value);
+    } else if (yamlHasOwnKey) {
+      errors += assign(options, key, yamlValue, true);
+    } else {
+      options[key] = format(value);
     }
 
-    if (!hasOwnKey || !validate(value)) {
-      options[key] = yamlHasOwnKey ? yamlValue : format(value);
+    if (errors) {
+      process.exit();
     }
   });
 
-  let worker = child_process.fork('./lib/thread.js');
+  const worker = child_process.fork('./lib/thread.js');
 
   worker.send({
     status: CONST.STATUS.BOOTSTRAP,
