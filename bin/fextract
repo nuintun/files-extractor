@@ -58,12 +58,13 @@ if (cluster.isMaster) {
     });
   }
 
-  function promptCheckbox(name, choices, required) {
+  function promptCheckbox(name, choices, required, defaults) {
     prompt.push({
       name: name,
       type: 'checkbox',
       message: `Please select options.${ name }: `,
       choices: choices,
+      default: Array.isArray(defaults) ? defaults : choices,
       validate: function(value) {
         if (required && value.length < 1) {
           return 'Oops, you must select at least one item!';
