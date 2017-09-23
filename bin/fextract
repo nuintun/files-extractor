@@ -24,6 +24,8 @@ if (cluster.isMaster) {
   const parseIgnore = utils.parseIgnore;
   const valueInvalid = utils.valueInvalid;
 
+  inquirer.registerPrompt('datetime', require('inquirer-datepicker-prompt'));
+
   program
     .version(pkg.version)
     .description(utils.color(pkg.description, 'cyan', false, true))
@@ -43,13 +45,23 @@ if (cluster.isMaster) {
   let prompt = [];
   let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
-  function promptInput(name, parser) {
+  function promptDatetime(name, initial) {
+    prompt.push({
+      name: name,
+      type: 'datetime',
+      initial: initial,
+      message: `Please input options.${ name }: `,
+      format: ['yyyy', '/', 'mm', '/', 'dd', ' ', 'hh', ':', 'MM', ':', 'l', ' ', 'TT']
+    });
+  }
+
+  function promptInput(name) {
     prompt.push({
       name: name,
       type: 'input',
       message: `Please input options.${ name }: `,
       validate: function(value) {
-        if (validator[name](parser ? parser(value) : value)) {
+        if (validator[name](value)) {
           return true;
         }
 
@@ -85,6 +97,8 @@ if (cluster.isMaster) {
     });
   }
 
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
   CONST.OPTIONS_KEYS.forEach(function(key) {
     let value = program[key];
     let yamlValue = yaml[key];
@@ -97,13 +111,17 @@ if (cluster.isMaster) {
       program[key] = value;
     }
 
+    function initalDatetime() {
+      return key === 'start' ? new Date(Date.now() - DAY_MS) : new Date();
+    }
+
     switch (key) {
       case 'start':
       case 'end':
         if (hasOwnKey) {
           if (!validate(value)) {
             valueInvalid(key);
-            promptInput(key, parseDate);
+            promptDatetime(key, initalDatetime());
           }
         } else if (yamlHasOwnKey) {
           yamlValue = parseDate(yamlValue);
@@ -112,11 +130,11 @@ if (cluster.isMaster) {
             save(yamlValue);
           } else {
             valueInvalid(key, CONST.YAML);
-            promptInput(key, parseDate);
+            promptDatetime(key, initalDatetime());
           }
         } else {
           if (key === 'start') {
-            promptInput(key, parseDate);
+            promptDatetime(key, initalDatetime());
           } else {
             save(format(value));
           }
