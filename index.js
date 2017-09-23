@@ -80,4 +80,11 @@ function extractor(options) {
   return worker;
 }
 
+Object.defineProperty(extractor, 'STATUS', {
+  writable: false,
+  enumerable: true,
+  configurable: false,
+  value: CONST.STATUS
+});
+
 module.exports = extractor;
