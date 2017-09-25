@@ -9,6 +9,7 @@
 
 ### Install
 [![NPM](https://nodei.co/npm/files-extractor.png)](https://nodei.co/npm/files-extractor/)
+> Notice: if want use command line must install with ```npm i -g files-extractor```
 
 ### Introduction
 ##### command line
