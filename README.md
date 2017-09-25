@@ -10,7 +10,7 @@
 ### Install
 [![NPM](https://nodei.co/npm/files-extractor.png)](https://nodei.co/npm/files-extractor/)
 
-### Introduction:
+### Introduction
 ##### command line
 ```
 >fextract -h
@@ -51,6 +51,50 @@ dot: # include dot files (see: node-glob)
   false
 ignore: # pattern for exclude search (see: node-glob)
   - node_modules/**/*
+```
+
+### API
+```js
+'use strict';
+
+const extractor = require('files-extractor');
+const STATUS = extractor.STATUS;
+
+// Returned a child process
+const worker = extractor(options);
+
+// Listen message event
+worker.on('message', function(message) {
+  switch (message.status) {
+    case STATUS.BOOTSTRAP:
+      // Bootstrap
+      break;
+    case STATUS.SEARCHING:
+      // Searching
+      break;
+    case STATUS.SEARCHED:
+      // Searched
+      break;
+    case STATUS.FILTERING:
+      // Filtering
+      break;
+    case STATUS.FILTERED:
+      // Filtered
+      break;
+    case STATUS.EXTRACTING:
+      // Extracting
+      break;
+    case STATUS.EXTRACTED:
+      // Extracted
+      break;
+    case STATUS.WARNING:
+      // Warning
+      break;
+    case STATUS.FAILED:
+      // Failed (child process will automatic exit)
+      break;
+  }
+});
 ```
 
 [david-image]: http://img.shields.io/david/nuintun/files-extractor.svg?style=flat-square

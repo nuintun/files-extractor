@@ -45,6 +45,12 @@ if (cluster.isMaster) {
   let prompt = [];
   let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
+  /**
+   * Prompt datetime
+   *
+   * @param {String} name
+   * @param {String} initial
+   */
   function promptDatetime(name, initial) {
     prompt.push({
       name: name,
@@ -55,6 +61,11 @@ if (cluster.isMaster) {
     });
   }
 
+  /**
+   * Prompt input
+   *
+   * @param {String} name
+   */
   function promptInput(name) {
     prompt.push({
       name: name,
@@ -70,6 +81,14 @@ if (cluster.isMaster) {
     });
   }
 
+  /**
+   * Prompt checkbox
+   *
+   * @param {String} name
+   * @param {Array} choices
+   * @param {Boolean} required
+   * @param {Array} defaults
+   */
   function promptCheckbox(name, choices, required, defaults) {
     prompt.push({
       name: name,
@@ -87,6 +106,13 @@ if (cluster.isMaster) {
     });
   }
 
+  /**
+   * Prompt list
+   *
+   * @param {String} name
+   * @param {Array} choices
+   * @param {Number} defaults
+   */
   function promptList(name, choices, defaults) {
     prompt.push({
       name: name,

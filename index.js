@@ -21,6 +21,15 @@ const valueInvalid = utils.valueInvalid;
 
 let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
+/**
+ * Assign options
+ *
+ * @param {Object} options
+ * @param {String} key
+ * @param {Any} value
+ * @param {String} source
+ * @returns {Number}
+ */
 function assign(options, key, value, source) {
   let validate = validator[key];
 
@@ -45,6 +54,11 @@ function assign(options, key, value, source) {
   return 0;
 }
 
+/**
+ * Extractor
+ *
+ * @param {Object} options
+ */
 function extractor(options) {
   let errors = 0;
 
@@ -70,6 +84,7 @@ function extractor(options) {
     }
   });
 
+  // Fork thread
   const worker = child_process.fork('./lib/thread.js');
 
   worker.send({
@@ -80,6 +95,7 @@ function extractor(options) {
   return worker;
 }
 
+// Process status
 Object.defineProperty(extractor, 'STATUS', {
   writable: false,
   enumerable: true,
