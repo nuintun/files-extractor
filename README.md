@@ -46,7 +46,7 @@ start: # filter start date of extract
   2017/9/19
 end: # filter end date of extract
   2017/9/20
-type: # filter type of extract, only one of [mtime, ctime, atime, birthtime]
+type: # filter type of extract, one or more of [mtime, ctime, atime, birthtime]
   mtime
 dot: # include dot files (see: node-glob)
   false
