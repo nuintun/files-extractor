@@ -24,7 +24,7 @@ if (cluster.isMaster) {
   const parseIgnore = utils.parseIgnore;
   const valueInvalid = utils.valueInvalid;
 
-  inquirer.registerPrompt('datetime', require('inquirer-datepicker-prompt'));
+  inquirer.registerPrompt('datepicker', require('../lib/inquirer/datepicker'));
 
   program
     .version(pkg.version)
@@ -54,10 +54,9 @@ if (cluster.isMaster) {
   function promptDatetime(name, initial) {
     prompt.push({
       name: name,
-      type: 'datetime',
+      type: 'datepicker',
       initial: initial,
-      message: `Please input options.${ name }: `,
-      format: ['yyyy', '/', 'mm', '/', 'dd', ' ', 'hh', ':', 'MM', ':', 'ss', ' ', 'TT']
+      message: `Please input options.${ name }: `
     });
   }
 
