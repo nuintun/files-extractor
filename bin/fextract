@@ -24,7 +24,7 @@ if (cluster.isMaster) {
   const parseIgnore = utils.parseIgnore;
   const valueInvalid = utils.valueInvalid;
 
-  inquirer.registerPrompt('datepicker', require('../lib/inquirer/datepicker'));
+  inquirer.registerPrompt('datepicker', require('inquirer-datepicker'));
 
   program
     .version(pkg.version)
@@ -55,7 +55,7 @@ if (cluster.isMaster) {
     prompt.push({
       name: name,
       type: 'datepicker',
-      initial: initial,
+      default: initial,
       message: `Please input options.${ name }: `
     });
   }
