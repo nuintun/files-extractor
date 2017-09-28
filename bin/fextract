@@ -56,7 +56,7 @@ if (cluster.isMaster) {
       name: name,
       type: 'datepicker',
       default: initial,
-      message: `Please input options.${ name }: `
+      message: `Please input options.${ name }:`
     });
   }
 
@@ -69,7 +69,7 @@ if (cluster.isMaster) {
     prompt.push({
       name: name,
       type: 'input',
-      message: `Please input options.${ name }: `,
+      message: `Please input options.${ name }:`,
       validate: function(value) {
         if (validator[name](value)) {
           return true;
@@ -92,7 +92,7 @@ if (cluster.isMaster) {
     prompt.push({
       name: name,
       type: 'checkbox',
-      message: `Please select options.${ name }: `,
+      message: `Please select options.${ name }:`,
       choices: choices,
       default: Array.isArray(defaults) ? defaults : choices,
       validate: function(value) {
@@ -116,7 +116,7 @@ if (cluster.isMaster) {
     prompt.push({
       name: name,
       type: 'list',
-      message: `Please select options.${ name }: `,
+      message: `Please select options.${ name }:`,
       choices: choices,
       default: defaults
     });
