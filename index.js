@@ -8,6 +8,7 @@
 
 'use strict';
 
+const path = require('path');
 const utils = require('./lib/utils');
 const CONST = require('./lib/const');
 const formatter = require('./lib/formatter');
@@ -85,7 +86,7 @@ function extractor(options) {
   });
 
   // Fork thread
-  const worker = child_process.fork('./lib/thread.js');
+  const worker = child_process.fork(path.join(__dirname, 'lib/thread.js'));
 
   worker.send({
     status: CONST.STATUS.BOOTSTRAP,
