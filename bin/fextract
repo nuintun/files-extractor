@@ -277,5 +277,5 @@ if (cluster.isMaster) {
 
   new UI(worker);
 } else {
-  require('../lib/thread');
+  require('../lib/worker');
 }
