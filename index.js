@@ -86,7 +86,7 @@ function extractor(options) {
   });
 
   // Fork thread
-  const worker = child_process.fork(path.join(__dirname, 'lib/worker'));
+  const worker = child_process.fork(path.join(__dirname, 'lib/worker'), { silent: true });
 
   worker.send({
     status: CONST.STATUS.BOOTSTRAP,
