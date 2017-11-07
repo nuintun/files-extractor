@@ -36,14 +36,14 @@ if (cluster.isMaster) {
     .option('-e, --end <date>', 'set the end date of extract', parseDate)
     .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, parseTypes);
 
-  program.on('--help', function() {
+  program.on('--help', () => {
     process.stdout.write(`\n\n  Documentation can be found at ${ utils.color(pkg.homepage, 'magenta', false, true) }.\n`);
   });
 
   program.parse(process.argv);
 
-  let prompt = [];
-  let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
+  const prompt = [];
+  const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
   /**
    * Prompt datetime
@@ -70,7 +70,7 @@ if (cluster.isMaster) {
       name: name,
       type: 'input',
       message: `Please input options.${ name }:`,
-      validate: function(value) {
+      validate: (value) => {
         if (validator[name](value)) {
           return true;
         }
@@ -95,7 +95,7 @@ if (cluster.isMaster) {
       message: `Please select options.${ name }:`,
       choices: choices,
       default: Array.isArray(defaults) ? defaults : choices,
-      validate: function(value) {
+      validate: (value) => {
         if (required && value.length < 1) {
           return 'Oops, you must select at least one item!';
         }
@@ -124,13 +124,13 @@ if (cluster.isMaster) {
 
   const DAY_MS = 24 * 60 * 60 * 1000;
 
-  CONST.OPTIONS_KEYS.forEach(function(key) {
-    let value = program[key];
+  CONST.OPTIONS_KEYS.forEach((key) => {
     let yamlValue = yaml[key];
-    let format = formatter[key];
-    let validate = validator[key];
-    let hasOwnKey = program.hasOwnProperty(key);
-    let yamlHasOwnKey = yaml.hasOwnProperty(key);
+    const value = program[key];
+    const format = formatter[key];
+    const validate = validator[key];
+    const hasOwnKey = program.hasOwnProperty(key);
+    const yamlHasOwnKey = yaml.hasOwnProperty(key);
 
     function save(value) {
       program[key] = value;
@@ -241,7 +241,7 @@ if (cluster.isMaster) {
   function bootstrap() {
     let options = {};
 
-    CONST.OPTIONS_KEYS.forEach(function(key) {
+    CONST.OPTIONS_KEYS.forEach((key) => {
       options[key] = program[key];
     });
 
@@ -256,19 +256,19 @@ if (cluster.isMaster) {
   if (prompt.length) {
     inquirer
       .prompt(prompt)
-      .then(function(input) {
+      .then((input) => {
         Object
           .keys(input)
-          .forEach(function(key) {
-            let value = input[key];
-            let format = formatter[key];
+          .forEach((key) => {
+            const value = input[key];
+            const format = formatter[key];
 
             program[key] = format(value);
           });
 
         worker.send(bootstrap());
       })
-      .catch(function(exception) {
+      .catch((exception) => {
         utils.error(exception);
       });
   } else {
