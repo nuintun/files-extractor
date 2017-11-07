@@ -19,8 +19,7 @@ const parseDate = utils.parseDate;
 const parseTypes = utils.parseTypes;
 const parseIgnore = utils.parseIgnore;
 const valueInvalid = utils.valueInvalid;
-
-let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
+const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
 /**
  * Assign options
@@ -32,7 +31,7 @@ let yaml = utils.loadYAML(CONST.YAML_SRC) || {};
  * @returns {Number}
  */
 function assign(options, key, value, source) {
-  let validate = validator[key];
+  const validate = validator[key];
 
   switch (key) {
     case 'start':
@@ -65,12 +64,12 @@ function extractor(options) {
 
   options = options || {};
 
-  CONST.OPTIONS_KEYS.forEach(function(key) {
-    let value = options[key];
-    let yamlValue = yaml[key];
-    let format = formatter[key];
-    let hasOwnKey = options.hasOwnProperty(key);
-    let yamlHasOwnKey = yaml.hasOwnProperty(key);
+  CONST.OPTIONS_KEYS.forEach((key) => {
+    const value = options[key];
+    const yamlValue = yaml[key];
+    const format = formatter[key];
+    const hasOwnKey = options.hasOwnProperty(key);
+    const yamlHasOwnKey = yaml.hasOwnProperty(key);
 
     if (hasOwnKey) {
       errors += assign(options, key, value);
