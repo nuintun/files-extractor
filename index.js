@@ -1,9 +1,7 @@
-/*!
- * index
- *
- * Date: 2017/09/22
- *
- * This is licensed under the MIT License (MIT).
+/**
+ * @module index
+ * @license MIT
+ * @version 2017/09/22
  */
 
 'use strict';
@@ -22,8 +20,8 @@ const valueInvalid = utils.valueInvalid;
 const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
 /**
- * Assign options
- *
+ * @function assign
+ * @description Assign options
  * @param {Object} options
  * @param {String} key
  * @param {Any} value
@@ -55,8 +53,8 @@ function assign(options, key, value, source) {
 }
 
 /**
- * Extractor
- *
+ * @function extractor
+ * @description Extractor
  * @param {Object} options
  */
 function extractor(options) {

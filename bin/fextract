@@ -2,7 +2,7 @@
 
 'use strict';
 
-// set process title
+// Set process title
 process.title = 'files extractor';
 
 const cluster = require('cluster');
@@ -46,8 +46,8 @@ if (cluster.isMaster) {
   const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
 
   /**
-   * Prompt datetime
-   *
+   * @function promptDatetime
+   * @description Prompt datetime
    * @param {String} name
    * @param {String} initial
    */
@@ -61,8 +61,8 @@ if (cluster.isMaster) {
   }
 
   /**
-   * Prompt input
-   *
+   * @function promptInput
+   * @description Prompt input
    * @param {String} name
    */
   function promptInput(name) {
@@ -81,8 +81,8 @@ if (cluster.isMaster) {
   }
 
   /**
-   * Prompt checkbox
-   *
+   * @function promptCheckbox
+   * @description Prompt checkbox
    * @param {String} name
    * @param {Array} choices
    * @param {Boolean} required
@@ -106,8 +106,8 @@ if (cluster.isMaster) {
   }
 
   /**
-   * Prompt list
-   *
+   * @function promptList
+   * @description Prompt list
    * @param {String} name
    * @param {Array} choices
    * @param {Number} defaults
