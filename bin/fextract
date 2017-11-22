@@ -34,10 +34,10 @@ if (cluster.isMaster) {
     .option('-o, --output <path>', 'set the output dir of extract')
     .option('-s, --start <date>', 'set the start date of extract', parseDate)
     .option('-e, --end <date>', 'set the end date of extract', parseDate)
-    .option('-t, --types <type,...>', `set the filter types[${ CONST.FILTER_TYPES.join(', ') }] of extract`, parseTypes);
+    .option('-t, --types <type,...>', `set the filter types[${CONST.FILTER_TYPES.join(', ')}] of extract`, parseTypes);
 
   program.on('--help', () => {
-    process.stdout.write(`\n\n  Documentation can be found at ${ utils.color(pkg.homepage, 'magenta', false, true) }.\n`);
+    process.stdout.write(`\n\n  Documentation can be found at ${utils.color(pkg.homepage, 'magenta', false, true)}.\n`);
   });
 
   program.parse(process.argv);
@@ -48,34 +48,34 @@ if (cluster.isMaster) {
   /**
    * @function promptDatetime
    * @description Prompt datetime
-   * @param {String} name
-   * @param {String} initial
+   * @param {string} name
+   * @param {string} initial
    */
   function promptDatetime(name, initial) {
     prompt.push({
       name: name,
       type: 'datepicker',
       default: initial,
-      message: `Please input options.${ name }:`
+      message: `Please input options.${name}:`
     });
   }
 
   /**
    * @function promptInput
    * @description Prompt input
-   * @param {String} name
+   * @param {string} name
    */
   function promptInput(name) {
     prompt.push({
       name: name,
       type: 'input',
-      message: `Please input options.${ name }:`,
-      validate: (value) => {
+      message: `Please input options.${name}:`,
+      validate: value => {
         if (validator[name](value)) {
           return true;
         }
 
-        return `Oops, value ${ JSON.stringify(value) } is invalid!`;
+        return `Oops, value ${JSON.stringify(value)} is invalid!`;
       }
     });
   }
@@ -83,7 +83,7 @@ if (cluster.isMaster) {
   /**
    * @function promptCheckbox
    * @description Prompt checkbox
-   * @param {String} name
+   * @param {string} name
    * @param {Array} choices
    * @param {Boolean} required
    * @param {Array} defaults
@@ -92,10 +92,10 @@ if (cluster.isMaster) {
     prompt.push({
       name: name,
       type: 'checkbox',
-      message: `Please select options.${ name }:`,
+      message: `Please select options.${name}:`,
       choices: choices,
       default: Array.isArray(defaults) ? defaults : choices,
-      validate: (value) => {
+      validate: value => {
         if (required && value.length < 1) {
           return 'Oops, you must select at least one item!';
         }
@@ -108,15 +108,15 @@ if (cluster.isMaster) {
   /**
    * @function promptList
    * @description Prompt list
-   * @param {String} name
+   * @param {string} name
    * @param {Array} choices
-   * @param {Number} defaults
+   * @param {number} defaults
    */
   function promptList(name, choices, defaults) {
     prompt.push({
       name: name,
       type: 'list',
-      message: `Please select options.${ name }:`,
+      message: `Please select options.${name}:`,
       choices: choices,
       default: defaults
     });
@@ -124,7 +124,7 @@ if (cluster.isMaster) {
 
   const DAY_MS = 24 * 60 * 60 * 1000;
 
-  CONST.OPTIONS_KEYS.forEach((key) => {
+  CONST.OPTIONS_KEYS.forEach(key => {
     let yamlValue = yaml[key];
     const value = program[key];
     const format = formatter[key];
@@ -203,13 +203,20 @@ if (cluster.isMaster) {
             valueInvalid(key);
 
             if (key === 'dot') {
-              promptList(key, [{
-                name: 'true',
-                value: true
-              }, {
-                name: 'false',
-                value: false
-              }], 1);
+              promptList(
+                key,
+                [
+                  {
+                    name: 'true',
+                    value: true
+                  },
+                  {
+                    name: 'false',
+                    value: false
+                  }
+                ],
+                1
+              );
             } else {
               promptInput(key);
             }
@@ -221,13 +228,20 @@ if (cluster.isMaster) {
             valueInvalid(key, CONST.YAML);
 
             if (key === 'dot') {
-              promptList(key, [{
-                name: 'true',
-                value: true
-              }, {
-                name: 'false',
-                value: false
-              }], 1);
+              promptList(
+                key,
+                [
+                  {
+                    name: 'true',
+                    value: true
+                  },
+                  {
+                    name: 'false',
+                    value: false
+                  }
+                ],
+                1
+              );
             } else {
               promptInput(key);
             }
@@ -241,7 +255,7 @@ if (cluster.isMaster) {
   function bootstrap() {
     let options = {};
 
-    CONST.OPTIONS_KEYS.forEach((key) => {
+    CONST.OPTIONS_KEYS.forEach(key => {
       options[key] = program[key];
     });
 
@@ -256,19 +270,17 @@ if (cluster.isMaster) {
   if (prompt.length) {
     inquirer
       .prompt(prompt)
-      .then((input) => {
-        Object
-          .keys(input)
-          .forEach((key) => {
-            const value = input[key];
-            const format = formatter[key];
+      .then(input => {
+        Object.keys(input).forEach(key => {
+          const value = input[key];
+          const format = formatter[key];
 
-            program[key] = format(value);
-          });
+          program[key] = format(value);
+        });
 
         worker.send(bootstrap());
       })
-      .catch((exception) => {
+      .catch(exception => {
         utils.error(exception);
       });
   } else {

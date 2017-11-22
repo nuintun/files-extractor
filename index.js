@@ -23,10 +23,10 @@ const yaml = utils.loadYAML(CONST.YAML_SRC) || {};
  * @function assign
  * @description Assign options
  * @param {Object} options
- * @param {String} key
- * @param {Any} value
- * @param {String} source
- * @returns {Number}
+ * @param {string} key
+ * @param {any} value
+ * @param {string} source
+ * @returns {number}
  */
 function assign(options, key, value, source) {
   const validate = validator[key];
@@ -62,7 +62,7 @@ function extractor(options) {
 
   options = options || {};
 
-  CONST.OPTIONS_KEYS.forEach((key) => {
+  CONST.OPTIONS_KEYS.forEach(key => {
     const value = options[key];
     const yamlValue = yaml[key];
     const format = formatter[key];
