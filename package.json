@@ -25,7 +25,7 @@
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
     "chalk": "^2.3.0",
-    "commander": "^2.11.0",
+    "commander": "^2.12.1",
     "fs-extra": "^4.0.2",
     "glob": "^7.1.2",
     "inquirer": "^4.0.0",
