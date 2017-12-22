@@ -8,11 +8,15 @@
 > [![Dependencies][david-image]][david-url]
 
 ### Install
+
 [![NPM](https://nodei.co/npm/files-extractor.png)](https://nodei.co/npm/files-extractor/)
-> Notice: if want use command line must install with ```npm i -g files-extractor```
+
+> Notice: if want use command line must install with `npm i -g files-extractor`
 
 ### Introduction
+
 ##### command line
+
 ```
 >fextract -h
 
@@ -37,6 +41,7 @@
 ```
 
 ##### fextract.yml
+
 ```yml
 files: # pattern to search for files (see: node-glob)
   "**/*"
@@ -55,6 +60,7 @@ ignore: # pattern for exclude search (see: node-glob)
 ```
 
 ### API
+
 ```js
 'use strict';
 
