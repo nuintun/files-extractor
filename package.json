@@ -1,6 +1,6 @@
 {
   "name": "files-extractor",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Extract files that have changed between the specified date.",
   "main": "index.js",
   "bin": {
@@ -28,12 +28,12 @@
     "commander": "^2.12.2",
     "fs-extra": "^5.0.0",
     "glob": "^7.1.2",
-    "inquirer": "^4.0.1",
+    "inquirer": "^4.0.2",
     "js-yaml": "^3.10.0",
     "progress": "^2.0.0",
     "cli-cursor": "^2.1.0",
     "log-symbols": "^2.1.0",
     "cli-spinners": "^1.1.0",
-    "inquirer-datepicker": "^0.0.7"
+    "inquirer-datepicker": "^0.0.8"
   }
 }
