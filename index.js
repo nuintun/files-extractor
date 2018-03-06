@@ -78,7 +78,7 @@ function extractor(options) {
     }
 
     if (errors) {
-      process.exit();
+      utils.exit(1);
     }
   });
 

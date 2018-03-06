@@ -1,6 +1,6 @@
 {
   "name": "files-extractor",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Extract files that have changed between the specified date.",
   "main": "index.js",
   "bin": {
@@ -24,12 +24,12 @@
   },
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
-    "chalk": "^2.3.1",
+    "chalk": "^2.3.2",
     "commander": "^2.14.1",
     "fs-extra": "^5.0.0",
     "glob": "^7.1.2",
     "inquirer": "^5.1.0",
-    "js-yaml": "^3.10.0",
+    "js-yaml": "^3.11.0",
     "progress": "^2.0.0",
     "cli-cursor": "^2.1.0",
     "log-symbols": "^2.2.0",
