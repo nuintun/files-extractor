@@ -1,12 +1,6 @@
 {
-  "printWidth": 120,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
+  "printWidth": 128,
   "singleQuote": true,
-  "trailingComma": "none",
-  "bracketSpacing": true,
-  "jsxBracketSameLine": false,
   "overrides": [
     {
       "files": ["*.css", "*.less", "*.scss"],

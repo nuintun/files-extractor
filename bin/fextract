@@ -12,10 +12,10 @@ if (cluster.isMaster) {
 
   const UI = require('../lib/ui');
   const program = require('commander');
-  const pkg = require('../package.json');
-  const utils = require('../lib/utils');
   const inquirer = require('inquirer');
+  const utils = require('../lib/utils');
   const CONST = require('../lib/const');
+  const pkg = require('../package.json');
   const formatter = require('../lib/formatter');
   const validator = require('../lib/validator');
 

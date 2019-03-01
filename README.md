@@ -44,7 +44,7 @@
 
 ```yml
 files: # pattern to search for files (see: node-glob)
-  "**/*"
+  **/*
 output: # output dir of extract
   .extract
 start: # filter start date of extract

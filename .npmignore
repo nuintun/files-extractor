@@ -24,6 +24,9 @@ test
 # npm lock file
 package-lock.json
 
+# yarn lock file
+yarn.lock
+
 # files extractor configuration and output
 fextract.yml
 .extract
