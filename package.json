@@ -1,6 +1,6 @@
 {
   "name": "files-extractor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Extract files that have changed between the specified date.",
   "main": "index.js",
   "bin": {
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/nuintun/files-extractor.git"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=8.0.0"
   },
   "keywords": [
     "extract",
@@ -34,15 +34,15 @@
   },
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
-    "ora": "^3.1.0",
-    "glob": "^7.1.3",
-    "chalk": "^2.4.2",
-    "fs-extra": "^7.0.1",
-    "inquirer": "^6.2.2",
-    "js-yaml": "^3.12.2",
+    "ora": "^4.0.3",
+    "glob": "^7.1.6",
+    "chalk": "^3.0.0",
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.1",
+    "js-yaml": "^3.13.1",
     "progress": "^2.0.3",
-    "commander": "^2.19.0",
-    "log-symbols": "^2.2.0",
-    "inquirer-datepicker": "^1.0.0"
+    "commander": "^4.0.1",
+    "log-symbols": "^3.0.0",
+    "inquirer-datepicker": "^1.1.0"
   }
 }
