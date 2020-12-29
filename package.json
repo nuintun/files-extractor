@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
-    "ora": "^4.0.3",
+    "ora": "^5.2.0",
     "glob": "^7.1.6",
     "chalk": "^3.0.0",
     "fs-extra": "^8.1.0",
