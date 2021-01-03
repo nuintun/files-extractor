@@ -39,7 +39,7 @@
     "chalk": "^3.0.0",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.1",
-    "js-yaml": "^3.13.1",
+    "js-yaml": "^4.0.0",
     "progress": "^2.0.3",
     "commander": "^4.0.1",
     "log-symbols": "^3.0.0",
