@@ -71,7 +71,7 @@ const STATUS = extractor.STATUS;
 const worker = extractor(options);
 
 // Listen message event
-worker.on('message', function(message) {
+worker.on('message', function (message) {
   switch (message.status) {
     case STATUS.BOOTSTRAP:
       // Bootstrap
