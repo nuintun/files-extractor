@@ -42,7 +42,7 @@
     "js-yaml": "^4.0.0",
     "progress": "^2.0.3",
     "commander": "^7.1.0",
-    "log-symbols": "^4.0.0",
+    "log-symbols": "^5.0.0",
     "inquirer-datepicker": "^2.0.0"
   }
 }
