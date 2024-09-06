@@ -34,15 +34,15 @@
   },
   "homepage": "https://github.com/nuintun/files-extractor#readme",
   "dependencies": {
-    "ora": "^5.3.0",
+    "ora": "^6.0.1",
     "glob": "^7.1.6",
     "chalk": "^4.1.0",
     "fs-extra": "^9.1.0",
-    "inquirer": "^8.0.0",
+    "inquirer": "^9.0.0",
     "js-yaml": "^4.0.0",
     "progress": "^2.0.3",
     "commander": "^7.1.0",
     "log-symbols": "^4.0.0",
-    "inquirer-datepicker": "^2.0.0"
+    "inquirer-datepicker": "^2.0.2"
   }
 }
